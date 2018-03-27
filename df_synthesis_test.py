@@ -31,7 +31,7 @@ def eventually_up_right(time, x_val, y_val):
         is_up_right.append(z3.And(xs[t] >= -x_val, ys[t] >= -y_val))
     return z3.And(is_up_right)
 
-def synthesise_me_a_trajectory(time1, time2, y_val1, x_val2, y_val2):
+def synthesise_me_a_trajectory(time1, y_val1, time2, x_val2, y_val2):
     S = z3.Solver()
     S.add(right_start)
     S.add(z3.And(no_jump_vert, no_jump_horiz))
@@ -44,7 +44,40 @@ def synthesise_me_a_trajectory(time1, time2, y_val1, x_val2, y_val2):
         print("x coordinates:", x_vals)
         print("y coordinates:", y_vals)
     else:
-        print("No trajectory like this exists!")
+        print("No trajectory can be synthesised with parameters",
+              (time1, y_val1, time2, x_val2, y_val2))
 
+def synthesise_trajectory_within_boxes(true_params, false_params):
+    # each argument is a list of tuples (time1, y_val1, time2, x_val2, y_val2)
+    # the ones in true_params are true, the ones in false_params are false.
+    # somehow assert that true_params 
+    S = z3.Solver()
+    S.add(right_start)
+    S.add(z3.And(no_jump_vert, no_jump_horiz))
+    for tup in true_params:
+        # somehow assert that tup is a tuple of integers
+        assert(len(tup) == 5)
+        S.add(z3.And(ever_below(tup[0], tup[1]),
+                     eventually_up_right(tup[2], tup[3], tup[4])))
+    for tup in false_params:
+        # somehow assert that tup is a tuple of integers
+        assert(len(tup) == 5)
+        S.add(z3.Not(z3.And(ever_below(tup[0], tup[1]),
+                            eventually_up_right(tup[2], tup[3], tup[4]))))
+    if S.check() == z3.sat:
+        model = S.model()
+        x_vals = [model.eval(xs[t]) for t in range(traj_length)]
+        y_vals = [model.eval(ys[t]) for t in range(traj_length)]
+        print("x coordinates:", x_vals)
+        print("y coordinates:", y_vals)
+    else:
+        print("No trajectory can be synthesised")
+        print("List of true parameters:", true_params)
+        print("List of false parameters:", false_params)
+
+        
 if __name__ == '__main__':
-    synthesise_me_a_trajectory(5,15,-2,-6,-6)
+    synthesise_me_a_trajectory(2,-2,15,-6,-6)
+    true_params = [(2,-2,15,-6,-6), (5,-6,18,-8,-8)]
+    false_params = [(3,-3,16,-8,-8), (15,-6,14,-10,-10)]
+    synthesise_trajectory_within_boxes(true_params, false_params)
