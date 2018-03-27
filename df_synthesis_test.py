@@ -22,7 +22,7 @@ no_jump_horiz = z3.And(isnt_jumping_horiz)
 def ever_below(time, y_val):
     is_below = []
     for t in range(time):
-        is_below.append(ys[t] < y_val)
+        is_below.append(ys[t] <= y_val)
     return z3.Or(is_below)
 
 def eventually_up_right(time, x_val, y_val):
@@ -50,7 +50,9 @@ def synthesise_me_a_trajectory(time1, y_val1, time2, x_val2, y_val2):
 def synthesise_trajectory_within_boxes(true_params, false_params):
     # each argument is a list of tuples (time1, y_val1, time2, x_val2, y_val2)
     # the ones in true_params are true, the ones in false_params are false.
-    # somehow assert that true_params 
+
+    # somehow assert that true_params and false_params are lists of equal
+    # length
     S = z3.Solver()
     S.add(right_start)
     S.add(z3.And(no_jump_vert, no_jump_horiz))
@@ -77,7 +79,9 @@ def synthesise_trajectory_within_boxes(true_params, false_params):
 
         
 if __name__ == '__main__':
-    synthesise_me_a_trajectory(2,-2,15,-6,-6)
-    true_params = [(2,-2,15,-6,-6), (5,-6,18,-8,-8)]
-    false_params = [(3,-3,16,-8,-8), (15,-6,14,-10,-10)]
+    print("Synthesised trajectory for single set of parameters:")
+    synthesise_me_a_trajectory(4,-3,15,-6,-6)
+    true_params = [(4,-3,15,-4,-4), (8,-4,18,-7,-7)]
+    false_params = [(6,-5,16,-8,-8), (15,-7,14,-10,-10)]
+    print("Synthesised trajectory for lists of true and false parameters:")
     synthesise_trajectory_within_boxes(true_params, false_params)
