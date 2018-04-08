@@ -20,12 +20,15 @@ for t in range(traj_length - 1):
 no_jump_horiz = z3.And(isnt_jumping_horiz)
 
 def ever_below(time, y_val):
+    # means that before time, y is at some point less than or equal to y_val
     is_below = []
     for t in range(time):
         is_below.append(ys[t] <= y_val)
     return z3.Or(is_below)
 
 def eventually_up_right(time, x_val, y_val):
+    # means that after time, x is always greater than or equal to -x_val,
+    # and y is always greater than or equal to -y_val
     is_up_right = []
     for t in range(time, traj_length):
         is_up_right.append(z3.And(xs[t] >= -x_val, ys[t] >= -y_val))
@@ -51,8 +54,9 @@ def synthesise_trajectory_within_boxes(true_params, false_params):
     # each argument is a list of tuples (time1, y_val1, time2, x_val2, y_val2)
     # the ones in true_params are true, the ones in false_params are false.
 
-    # somehow assert that true_params and false_params are lists of equal
-    # length
+    assert isinstance(true_params, list)
+    assert isinstance(false_params, list)
+    assert len(true_params) == len(false_params)
     S = z3.Solver()
     S.add(right_start)
     S.add(z3.And(no_jump_vert, no_jump_horiz))
