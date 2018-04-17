@@ -1,6 +1,8 @@
 import z3
 import boundary_to_trace_v2
 
+# update: I now think that it makes more sense to not do this by number of kinks
+
 def label(boundary):
     # takes a boundary, and returns its proper label
     # implementation will depend on context, and in the extreme case will
@@ -30,6 +32,19 @@ def grid_to_boundary(grid_boundary, grid_dims):
         boundary.append(grid_point_to_params(point, grid_dims))
     return boundary
 
+def num_possible_kinks(grid_dims):
+    # returns the number of possible kinks a boundary in discretised parameter
+    # space can have.
+    # grid_dims is a dict containing num_x, the number of bins for the first
+    # parameter, and num_y, the number of bins for the second parameter.
+    num_x = grid_dims['num_x']
+    num_y = grid_dims['num_y']
+    if num_x == num_y:
+        return 2*(num_x - 1) - 1
+    else:
+        n = min(num_x, num_y)
+        return 2*(n-1)
+
 def classify_n_kinks(n, grid_dims):
     # this function iterates through discretised boundaries with n 'kinks',
     # classifies them, and returns an artefact recording these classifications
@@ -43,6 +58,10 @@ def classify_n_kinks(n, grid_dims):
     num_x = grid_dims['num_x']
     y_spacing = grid_dims['y_spacing']
     num_y = grid_dims['num_y']
+
+    assert(n >= 0)
+    assert(n <= num_possible_kinks(grid_dims))
+    
     pass
 
 def classify_grid_trajectories(grid_dims):
