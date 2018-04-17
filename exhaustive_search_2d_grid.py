@@ -1,8 +1,6 @@
 import z3
 import boundary_to_trace_v2
 
-# update: decided to work on exhaustive_search_2d_grid instead
-
 def label(boundary):
     # takes a boundary, and returns its proper label
     # implementation will depend on context, and in the extreme case will
@@ -14,12 +12,11 @@ def grid_point_to_params(grid_point, grid_dims):
     # in parameter space
     # grid_point is a 2-tuple of natural numbers.
     # grid_dims is a dict containing variables below.
-    # spacings is an array containing the width of bins of each parameter.
-    spacings = grid_dims['spacings']
-    assert (len(grid_point) == len(spacings),
-            "dimensions don't match in grid_point_to_params")
-    params = [spacings[i]*(grid_point[i] + 0.5) for i in range(len(grid_point))]
-    return params
+    # x_spacing is the width of bins of the first parameter.
+    # y_spacing is analogous.
+    x_spacing = grid_dims['x_spacing']
+    y_spacing = grid_dims['y_spacing']
+    return ((grid_point[0] + 0.5)*x_spacing, (grid_point[1] + 0.5)*y_spacing)
     
 def grid_to_boundary(grid_boundary, grid_dims):
     # this function takes a boundary in the discretisation of parameter space,
@@ -37,8 +34,11 @@ def classify_grid_trajectories(grid_dims):
     # and returns an artefact recording these classifications.
     # TODO: what should this artefact be?
     # grid_dims is a dict containing variables below.
-    # spacings is an array containing the width of bins of each parameter.
-    # nums is an array containing the number of bins for each parameter.
-    spacings = grid_dims['spacings']
-    nums = grid_dims['nums']
+    # x_spacing is the width of bins of the first parameter.
+    # num_x is the number of bins of the first parameter.
+    # y_spacing and num_y are analogous
+    x_spacing = grid_dims['x_spacing']
+    num_x = grid_dims['num_x']
+    y_spacing = grid_dims['y_spacing']
+    num_y = grid_dims['num_y']
     pass
