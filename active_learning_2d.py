@@ -87,20 +87,30 @@ def find_endpoint_bounds(positive_example, tolerance, param_boundaries):
     positive_example should be some boundary.
     tolerance should be a float.
     param_boundaries should be a list of lists giving lower and upper bounds for
-    the possible parameter values.
+    the possible parameter values. Specifically, it should be a list of the form
+    [[lower_bound_x, upper_bound_x], [lower_bound_y, upper_bound_y]]
     """
     # TODO: write type asserts
     example_ends = [positive_example[0], positive_example[-1]]
-    top_end = [positive_example[0][0], param_boundaries[1][1]]
+    top_end = [example_ends[0][0], param_boundaries[1][1]]
     test_top_boundary = endpoints_to_boundary([top_end, example_ends[1]])
     if label(test_top_boundary):
-        something
+        top_end = [example_ends[1][0], param_boundaries[1][1]]
+        test_top_boundary = endpoints_to_boundary[top_end, example_ends[1]]
+        if label(test_top_boundary):
+            oh shit
+        else:
+            # find where bottom-right end of boundary has to go to stop being
+            # positive
     else:
-        blah
+        # find where bottom-right end of boundary has to go to stop being
+        # positive
+        # then do find_endpoint_bound given these pos and neg examples
     pass
 
 def find_endpoint_bound(tolerance, vary_end, pos_ends, neg_ends):
     assert isinstance(tolerance, float), "first argument of find_endpoint_bound should be the tolerance to which you want to find your endpoint bound and generate boundaries"
+    assert tolerance > 0, "tolerance argument to find_endpoint_bound should be positive"
     assert isinstance(vary_end, int), "vary_end should be an int in find_endpoint_bound"
     assert 0 <= vary_end and vary_end <= 1, "vary_end should be 0 or 1 in find_endpoint_bound"
     assert pos_ends[1 - vary_end] == neg_ends[1 - vary_end], "end you're not varying in find_endpoint_bound should be fixed between examples"
