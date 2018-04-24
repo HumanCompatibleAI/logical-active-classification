@@ -89,6 +89,7 @@ def find_endpoint_bounds(positive_example, tolerance, param_boundaries):
     param_boundaries should be a list of lists giving lower and upper bounds for
     the possible parameter values.
     """
+    # TODO: write type asserts
     example_ends = [positive_example[0], positive_example[-1]]
     top_end = [positive_example[0][0], param_boundaries[1][1]]
     test_top_boundary = endpoints_to_boundary([top_end, example_ends[1]])
@@ -98,15 +99,30 @@ def find_endpoint_bounds(positive_example, tolerance, param_boundaries):
         blah
     pass
 
-def find_endpoint_bound(num_iters, vary_end, pos_endpoints, neg_endpoints,
-                        vary_index):
-    assert isinstance(num_iters, int), "first argument of find_endpoint_bound should be integer number of iterations you want"
-    assert isinstance(vary_end, int), "second argument of find_endpoint_bound should be int"
+def find_endpoint_bound(tolerance, vary_end, pos_ends, neg_ends):
+    assert isinstance(tolerance, float), "first argument of find_endpoint_bound should be the tolerance to which you want to find your endpoint bound and generate boundaries"
+    assert isinstance(vary_end, int), "vary_end should be an int in find_endpoint_bound"
     assert 0 <= vary_end and vary_end <= 1, "vary_end should be 0 or 1 in find_endpoint_bound"
-    assert pos_endpoints[1 - vary_end] == neg_endpoints[1 - vary_end], "end you're not varying in find_endpoint_bound should be fixed between examples"
-    assert pos_endpoints[vary_end] != neg_endpoints[vary_end], "end you vary in find_endpoint_bound should differ between examples"
-    # maybe put vary_end and vary_index in one thing
-    pass
+    assert pos_ends[1 - vary_end] == neg_ends[1 - vary_end], "end you're not varying in find_endpoint_bound should be fixed between examples"
+    # write more assertions later
+    if pos_ends[vary_end][0] != neg_ends[vary_end][0]:
+        vary_index = 0
+    else:
+        vary_index = 1
+    distance = abs(pos_ends[vary_end][vary_index]
+                   - neg_ends[vary_end][vary_index])
+    num_iters = np.ceil((-1)*np.log2(tolerance / distance))
+    for i in range(num_iters):
+        test_ends = pos_ends
+        test_val = 0.5*(pos_ends[vary_end][vary_index]
+                        + neg_ends[vary_end][vary_index])
+        test_ends[vary_end][vary_index] = test_val
+        test_boundary = endpoints_to_boundary(test_ends, tolerance)
+        if label(test_boundary):
+            pos_ends[vary_end][vary_index] = test_val
+        else:
+            neg_ends[vary_end][vary_index] = test_val
+    return pos_ends
 
 def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
                              is_positive):
