@@ -3,9 +3,9 @@ import boundary_to_trace_v2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def label(trace):
+def label(boundary):
     """
-    Takes a trace, and returns its proper label.
+    Takes a boundary, and returns its proper label, which is True or False.
 
     Correct implementation will depend on context, and in the extreme case will
     require computation done by the human.
@@ -13,30 +13,12 @@ def label(trace):
     pass
 
 def get_positive_example():
-    """Somehow samples a trace that should be classified positively"""
+    """Somehow samples a boundary that should be classified positively"""
     pass
-
-# how this code should work:
-# first, get some positive example.
-# then, possibly in parallel, figure out the top and bottom bounds of the convex
-# set of goodness around your positive example
-# to do that, first figure out where the ends are allowed to go, by moving them
-# up and down as necessary
-# then, take the middle of your line, and try moving it 'out' (perpendicular to
-# the slope) until it gets classified negative (not really - really do some
-# bisection thing where you figure out how far it can possibly go).
-# repeat this with the midpoints of the two resulting line segments, until you
-# reach tolerance.
-# note that this recursion has to keep the rest of the line as part of the state
-# we should be able to represent line segments here with two endpoints, making
-# slope calculations easy, and minimising how much shit we have to store.
-# also do this in the negative direction.
-# note: it would be nice if all of our points in parameter space could be numpy
-# arrays
 
 def midpoint(endpoints):
     """Return the midpoint of a list of two endpoints"""
-    assert isinstance(endpoints, list), "endpoints of wrong type in function midpoint"
+    assert isinstance(endpoints, list) or isinstance(endpoints, tuple), "endpoints of wrong type in function midpoint"
     assert len(endpoints) == 2, "you didn't give exactly two endpoints in the midpoint function"
     points = np.array(endpoints)
     return 0.5*(points[0] + points[1])
@@ -82,25 +64,52 @@ def move_middle_out(endpoints, distance):
     argument, and moves the middle out perpendicularly some distance. if the
     distance is positive, the middle should be pushed out into the top-right
     (i.e. the positive direction), and if distance is negative, the middle 
-    should be pulled into the bottom-left (i.e. the negative direction)
+    should be pulled into the bottom-left (i.e. the negative direction).
+    the return value is the final location of the midpoint.
 
     Argument types:
     endpoints -- a tuple of points in parameter space
     distance -- a float that can be positive or negative
     """
-    pass
+    mpoint = midpoint(endpoints)
+    length = np.sqrt((endpoints[0][0] - endpoints[1][0])**2
+                     + (endpoints[0][1] - endpoints[1][1])**2)
+    my_ends = np.array(endpoints)
+    direction = np.array([-1,1]) * ((my_ends[1] - my_ends[0])[::-1])
+    return (mpoint + (distance/length)*direction).tolist()
 
-def find_endpoint_bounds(positive_example):
+def find_endpoint_bounds(positive_example, tolerance, param_boundaries):
     """
     Find upper+lower bounds for where the endpoints of the boundary can be
 
     Returns a tuple of 4 coordinates: (left_upper_bound, right_upper_bound,
     left_lower_bound, right_lower_bound)
     positive_example should be some boundary.
+    tolerance should be a float.
+    param_boundaries should be a list of lists giving lower and upper bounds for
+    the possible parameter values.
     """
+    example_ends = [positive_example[0], positive_example[-1]]
+    top_end = [positive_example[0][0], param_boundaries[1][1]]
+    test_top_boundary = endpoints_to_boundary([top_end, example_ends[1]])
+    if label(test_top_boundary):
+        something
+    else:
+        blah
     pass
 
-def maximally_extend_segment(endpoints, index, tolerance, is_positive):
+def find_endpoint_bound(num_iters, vary_end, pos_endpoints, neg_endpoints,
+                        vary_index):
+    assert isinstance(num_iters, int), "first argument of find_endpoint_bound should be integer number of iterations you want"
+    assert isinstance(vary_end, int), "second argument of find_endpoint_bound should be int"
+    assert 0 <= vary_end and vary_end <= 1, "vary_end should be 0 or 1 in find_endpoint_bound"
+    assert pos_endpoints[1 - vary_end] == neg_endpoints[1 - vary_end], "end you're not varying in find_endpoint_bound should be fixed between examples"
+    assert pos_endpoints[vary_end] != neg_endpoints[vary_end], "end you vary in find_endpoint_bound should differ between examples"
+    # maybe put vary_end and vary_index in one thing
+    pass
+
+def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
+                             is_positive):
     pass
 
 def interleave(small_list, big_list):
@@ -116,7 +125,7 @@ def interleave(small_list, big_list):
         new_list.append(big_list[j + len(small_list)])
     return new_list
 
-def find_positive_set(iterations, tolerance_a, tolerance_b):
+def find_positive_set(iterations, tolerance_a, tolerance_b, param_boundaries):
     """
     Find the set of boundaries that should be classified positively.
 
@@ -129,6 +138,9 @@ def find_positive_set(iterations, tolerance_a, tolerance_b):
     iterations -- integer
     tolerance_a -- float. Should be positive.
     tolerance_b -- float. Should be positive.
+    param_boundaries -- list of form [[lower_bound_x, upper_bound_x], 
+                                      [lower_bound_y, upper_bound_y]],
+                        describing the dimensions of parameter space
 
     note: should really separate out tolerance for how finely we're generating
     boundaries vs tolerance for how careful we are about where the boundary of 
@@ -143,7 +155,8 @@ def find_positive_set(iterations, tolerance_a, tolerance_b):
     assert tolerance_b > 0, "tolerance_b should be positive in find_positive_set"
     
     positive_example = get_positive_example()
-    endpoint_bounds = find_endpoint_bounds(positive_example)
+    endpoint_bounds = find_endpoint_bounds(positive_example, tolerance_b,
+                                           param_boundaries)
 
     upper_bound = [endpoint_bounds[0], endpoint_bounds[1]]
     lower_bound = [endpoint_bounds[2], endpoint_bounds[3]]
@@ -153,10 +166,10 @@ def find_positive_set(iterations, tolerance_a, tolerance_b):
         upper_extensions = []
         lower_extensions = []
         for j in range(len(upper_bound) - 1):
-            new_upper = maximally_extend_segment(upper_bound, j, tolerance_b,
-                                                 True)
-            new_lower = maximally_extend_segment(lower_bound, j, tolerance_b,
-                                                 False)
+            new_upper = maximally_extend_segment(upper_bound, j, tolerance_a,
+                                                 tolerance_b, True)
+            new_lower = maximally_extend_segment(lower_bound, j, tolerance_a,
+                                                 tolerance_b, False)
             upper_extensions.append(new_upper)
             lower_extensions.append(new_lower)
         assert len(upper_extensions) == len(lower_extensions), "upper_extensions and lower_extensions should end up having the same length after the end of the inner loop of find_positive_set"
