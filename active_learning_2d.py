@@ -1,6 +1,7 @@
 import z3
 import boundary_to_trace_v2
-import numpy
+import numpy as np
+import matplotlib.pyplot as plt
 
 def label(trace):
     """
@@ -51,7 +52,27 @@ def endpoints_to_boundary(list_endpoints, tolerance):
     assert isinstance(list_endpoints, list), "first argument of endpoints_to_boundary should be a list"
     assert isinstance(tolerance, float), "second argument of endpoints_to_boundary should be a float"
     assert tolerance > 0, "you gave a non-positive tolerance in endpoints_to_boundary"
-    pass
+    boundary = []
+    for i in range(len(list_endpoints) - 1):
+        start = list_endpoints[i]
+        end = list_endpoints[i+1]
+        total_dist = np.sqrt((end[0] - start[0])**2 + (end[1] - start[1])**2)
+        n = int(np.floor(total_dist / tolerance))
+        for j in range(n):
+            frac = j * tolerance / total_dist
+            waypoint = [frac*start[0] + (1-frac)*end[0],
+                        frac*start[1] + (1-frac)*end[1]]
+            boundary.append(waypoint)
+    return boundary
+
+# # test of endpoints_to_boundary
+# my_list_endpoints = [[0,1], [0.7,0.5], [1,0]]
+# my_tolerance = 0.01
+# my_boundary = endpoints_to_boundary(my_list_endpoints, my_tolerance)
+# # print(my_boundary)
+# # print(zip(*my_boundary))
+# plt.scatter(*zip(*my_boundary))
+# plt.show()
 
 def move_middle_out(endpoints, distance):
     """
