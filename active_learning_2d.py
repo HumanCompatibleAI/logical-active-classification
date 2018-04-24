@@ -1,0 +1,152 @@
+import z3
+import boundary_to_trace_v2
+import numpy
+
+def label(trace):
+    """
+    Takes a trace, and returns its proper label.
+
+    Correct implementation will depend on context, and in the extreme case will
+    require computation done by the human.
+    """
+    pass
+
+def get_positive_example():
+    """Somehow samples a trace that should be classified positively"""
+    pass
+
+# how this code should work:
+# first, get some positive example.
+# then, possibly in parallel, figure out the top and bottom bounds of the convex
+# set of goodness around your positive example
+# to do that, first figure out where the ends are allowed to go, by moving them
+# up and down as necessary
+# then, take the middle of your line, and try moving it 'out' (perpendicular to
+# the slope) until it gets classified negative (not really - really do some
+# bisection thing where you figure out how far it can possibly go).
+# repeat this with the midpoints of the two resulting line segments, until you
+# reach tolerance.
+# note that this recursion has to keep the rest of the line as part of the state
+# we should be able to represent line segments here with two endpoints, making
+# slope calculations easy, and minimising how much shit we have to store.
+# also do this in the negative direction.
+# note: it would be nice if all of our points in parameter space could be numpy
+# arrays
+
+def midpoint(endpoints):
+    """Return the midpoint of a list of two endpoints"""
+    assert isinstance(endpoints, list), "endpoints of wrong type in function midpoint"
+    assert len(endpoints) == 2, "you didn't give exactly two endpoints in the midpoint function"
+    points = np.array(endpoints)
+    return 0.5*(points[0] + points[1])
+
+def endpoints_to_boundary(list_endpoints, tolerance):
+    """
+    Return a list of points 'tolerance' apart that lie between the endpoints
+
+    Take a list of endpoints, representing a piecewise linear boundary, and
+    return the 'actual boundary', i.e. a list of points, each of which is at 
+    distance 'tolerance' (ideally a small number) from the next one.
+    """
+    assert isinstance(list_endpoints, list), "first argument of endpoints_to_boundary should be a list"
+    assert isinstance(tolerance, float), "second argument of endpoints_to_boundary should be a float"
+    assert tolerance > 0, "you gave a non-positive tolerance in endpoints_to_boundary"
+    pass
+
+def move_middle_out(endpoints, distance):
+    """
+    take a line segment, return one with the middle moved out perpendicularly
+
+    this function takes a straight line segment, with endpoints given as an
+    argument, and moves the middle out perpendicularly some distance. if the
+    distance is positive, the middle should be pushed out into the top-right
+    (i.e. the positive direction), and if distance is negative, the middle 
+    should be pulled into the bottom-left (i.e. the negative direction)
+
+    Argument types:
+    endpoints -- a tuple of points in parameter space
+    distance -- a float that can be positive or negative
+    """
+    pass
+
+def find_endpoint_bounds(positive_example):
+    """
+    Find upper+lower bounds for where the endpoints of the boundary can be
+
+    Returns a tuple of 4 coordinates: (left_upper_bound, right_upper_bound,
+    left_lower_bound, right_lower_bound)
+    positive_example should be some boundary.
+    """
+    pass
+
+def maximally_extend_segment(endpoints, index, tolerance, is_positive):
+    pass
+
+def interleave(small_list, big_list):
+    """Interleave two lists of different length. First arg should be shorter."""
+    assert isinstance(small_list, list), "First argument of interleave should be a list, is not."
+    assert isinstance(big_list, list), "Second argument of interleave should be a list, is not."
+    assert len(small_list) <= len(big_list), "Second argument of interleave should be longer list than first argument."
+    new_list = []
+    for i in range(len(small_list)):
+        new_list.append(big_list[i])
+        new_list.append(small_list[i])
+    for j in range(len(big_list) - len(small_list)):
+        new_list.append(big_list[j + len(small_list)])
+    return new_list
+
+def find_positive_set(iterations, tolerance_a, tolerance_b):
+    """
+    Find the set of boundaries that should be classified positively.
+
+    First, find the upper and lower edge bounds. Then, move the midpoints of 
+    positively-classified boundaries out until they are negatively classified.
+    Recurse for the midpoints of the line segments created in this process for
+    some number of iterations.
+
+    Argument types:
+    iterations -- integer
+    tolerance_a -- float. Should be positive.
+    tolerance_b -- float. Should be positive.
+
+    note: should really separate out tolerance for how finely we're generating
+    boundaries vs tolerance for how careful we are about where the boundary of 
+    the convex set is. at the moment we'll just call them tolerance_a and 
+    tolerance_b, need better names
+    """
+    assert isinstance(iterations, int) or isinstance(iterations, long), "iterations isn't an integer in find_positive_set"
+    assert iterations > 0, "you can't have a non-positive number of iterations in find_positive_set"
+    assert isinstance(tolerance_a, float), "tolerance_a should be a float in find_positive_set"
+    assert tolerance_a > 0, "tolerance_a should be positive in find_positive_set"
+    assert isinstance(tolerance_b, float), "tolerance_b should be a float in find_positive_set"
+    assert tolerance_b > 0, "tolerance_b should be positive in find_positive_set"
+    
+    positive_example = get_positive_example()
+    endpoint_bounds = find_endpoint_bounds(positive_example)
+
+    upper_bound = [endpoint_bounds[0], endpoint_bounds[1]]
+    lower_bound = [endpoint_bounds[2], endpoint_bounds[3]]
+
+    for i in range(iterations):
+        assert len(upper_bound) == len(lower_bound), "somehow upper and lower bounds became a different length in the loop of find_positive_set"
+        upper_extensions = []
+        lower_extensions = []
+        for j in range(len(upper_bound) - 1):
+            new_upper = maximally_extend_segment(upper_bound, j, tolerance_b,
+                                                 True)
+            new_lower = maximally_extend_segment(lower_bound, j, tolerance_b,
+                                                 False)
+            upper_extensions.append(new_upper)
+            lower_extensions.append(new_lower)
+        assert len(upper_extensions) == len(lower_extensions), "upper_extensions and lower_extensions should end up having the same length after the end of the inner loop of find_positive_set"
+        assert len(upper_extensions) == len(upper_bound) - 1, "upper_extensions should have length 1 less than upper_bound after the inner loop of find_positive_set"
+        upper_bound = interleave(upper_extensions, upper_bound)
+        lower_bound = interleave(lower_extensions, lower_bound)
+    return (upper_bound, lower_bound)
+
+def classify_trace(bounds, trace):
+    # how to tell if a boundary is between two bounds?
+    # for every point on the boundary, find the two points on the upper boundary
+    # with x-coordinates that surround you, take the weighted average of their
+    # y-coordinates, see if you're below that. same deal with lower boundary.
+    pass
