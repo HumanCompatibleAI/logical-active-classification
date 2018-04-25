@@ -2,6 +2,7 @@ import z3
 import boundary_to_trace_v2
 import numpy as np
 import matplotlib.pyplot as plt
+from typing import List
 
 def label(boundary):
     """
@@ -98,7 +99,7 @@ def find_endpoint_bounds(positive_example, tolerance, param_boundaries):
         top_end = [example_ends[1][0], param_boundaries[1][1]]
         test_top_boundary = endpoints_to_boundary[top_end, example_ends[1]]
         if label(test_top_boundary):
-            oh shit
+            # do something
         else:
             # find where bottom-right end of boundary has to go to stop being
             # positive
@@ -209,4 +210,8 @@ def classify_trace(bounds, trace):
     # for every point on the boundary, find the two points on the upper boundary
     # with x-coordinates that surround you, take the weighted average of their
     # y-coordinates, see if you're below that. same deal with lower boundary.
+
+    # bounds is a tuple of lists of points. the lists have the same length.
+    
+    # ced works on this
     pass
