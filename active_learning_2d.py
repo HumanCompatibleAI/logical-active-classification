@@ -95,37 +95,141 @@ def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
     assert isinstance(tolerance_b, float), "third argument of find_endpoint_bounds should be a float"
     assert tolerance_a > 0
     assert tolerance_b > 0
-    # TODO: write type asserts
+    # TODO: write more type asserts
+    have_found_top_right_end = False
     example_ends = [positive_example[0], positive_example[-1]]
-    top_end = [example_ends[0][0], param_boundaries[1][1]]
-    test_top_boundary = endpoints_to_boundary([top_end, example_ends[1]],
-                                              tolerance_a)
-    # everything below is just nonsense
-    if label(test_top_boundary):
-        top_end = [example_ends[1][0], param_boundaries[1][1]]
-        test_top_boundary = endpoints_to_boundary([top_end, example_ends[1]],
-                                                  tolerance_a)
-        if label(test_top_boundary):
-            # find where bottom-right end of boundary has to go to stop being
-            # positive
-            right_end = [param_boundaries[0][1], example_ends[1][1]]
-            
-        else:
-            top_left_neg = [test_top_boundary[0], test_top_boundary[-1]]
-            top_left_bound = find_endpoint_bound(tolerance_b, 0, example_ends,
-                                                 top_left_neg)
+    pos_ends = example_ends
+    # first, move top left end of positive example to maximum y value, and check
+    # if that makes it negative.
+    top_left_end = [pos_ends[0][0], param_boundaries[1][1]]
+    test_ends = [top_left_end, pos_ends[1]]
+    test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
+    if (not label(test_top_boundary)):
+        # if result is negative, then find the limit for the top left end
+        # between our positive example and the result
+        top_left_limit = find_endpoint_bound(tolerance_a, tolerance_b, 0,
+                                             pos_ends, test_ends)
     else:
-        top_left_neg = [test_top_boundary[0], test_top_boundary[-1]]
-        top_left_bound = find_endpoint_bound(tolerance_b, 0, example_ends,
-                                             top_left_neg)
-        # find where bottom-right end of boundary has to go to stop being
-        # positive
-        # then do find_endpoint_bound given these pos and neg examples
+        # if not, move it as far right as the right end of the boundary and
+        # check if it's negative now.
+        pos_ends = test_ends
+        top_left_end = [pos_ends[1][0], param_boundaries[1][1]]
+        test_ends = [top_left_end, pos_ends[1]]
+        test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
+        if (not label(test_top_boundary)):
+            # if this new result is negative, find the limit for the top left
+            # end between the old positive result and the new negative results
+            top_left_limit = find_endpoint_bound(tolerance_a, tolerance_b, 0,
+                                                 pos_ends, test_ends)
+        else:
+            # if the new result still isn't negative, find the limit of where
+            # the right end can go
+            # first, move the right end as far as possible to the right
+            pos_ends = test_ends
+            top_right_end = [param_boundaries[0][1], pos_ends[1][1]]
+            test_ends = [pos_ends[0], top_right_end]
+            test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
+            if (not label(test_top_boundary)):
+                # if this makes the boundary negative, find the limit for the
+                # top right end
+                top_right_limit = find_endpoint_bound(tolerance_a, tolerance_b,
+                                                      1, pos_ends, test_ends)
+                have_found_top_right_end = True
+                # then move the top left end that far right.
+                pos_ends[1] = top_right_limit
+                top_left_end = [top_right_limit[0], pos_ends[0][1]]
+                test_ends = [top_left_end, pos_ends[1]]
+                test_top_boundary = endpoints_to_boundary(test_ends,
+                                                          tolerance_a)
+                if (not label(test_top_boundary)):
+                    # if that makes it negative, find the limit of where the top
+                    # end can go
+                    top_left_limit = find_endpoint_bound(tolerance_a,
+                                                         tolerance_b, 0,
+                                                         pos_ends, test_ends)
+                else:
+                    # if that doesn't make it go negative, then that's just the
+                    # boundary
+                    top_left_limit = top_left_end
+            else:
+                # if moving the right end as far as possible to the right didn't
+                # make it a negative example, try moving it as far up as
+                # possible
+                pos_ends = test_ends
+                top_right_end[1] = param_boundaries[1][1]
+                test_ends = [pos_ends[0], top_right_end]
+                test_top_boundary = endpoints_to_boundary(test_ends,
+                                                          tolerance_a)
+                if (not label(test_top_boundary)):
+                    # if moving the right end as far up as possible makes it
+                    # negative, find how far up it can go
+                    top_right_limit = find_endpoint_bound(tolerance_a,
+                                                          tolerance_b, 1,
+                                                          pos_ends, test_ends)
+                    have_found_top_right_end = True
+                    # now, check if moving the left end as far as possible to
+                    # the right makes it negative
+                    top_left_end = [param_boundaries[0][1], pos_ends[0][1]]
+                    test_ends = [top_left_end, top_right_limit]
+                    test_top_boundary = endpoints_to_boundary(test_ends,
+                                                              tolerance_a)
+                    if (not label(test_top_boundary)):
+                        # if that did make it negative, find the top left limit
+                        # between those
+                        top_left_limit = find_endpoint_bound(tolerance_a,
+                                                             tolerance_b, 0,
+                                                             pos_ends,
+                                                             test_ends)
+                    else:
+                        # if moving the left end as far as possible to the right
+                        # didn't make it negative, then that is now the top left
+                        # limit
+                        top_left_limit = top_left_end
+                else:
+                    # if moving the right end as far up as possible didn't make
+                    # it negative, you've found the top right end.
+                    top_right_limit = top_right_end
+                    have_found_top_right_end = True
+                    # you've also found the top left end
+                    top_left_limit = pos_ends[0]
+
+    # next, find the top right end if you haven't already
+    if (not have_found_top_right_end):
+        # to do this, first try moving the right end as far right as possible
+        top_right_end = [param_boundaries[0][1], pos_ends[1][1]]
+        test_ends = [pos_ends[0], top_right_end]
+        test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
+        if (not label(test_top_boundary)):
+            # if that makes the boundary a negative example, then find the top
+            # right limit between pos_ends and test_ends
+            top_right_limit = find_endpoint_bound(tolerance_a, tolerance_b, 1,
+                                                  pos_ends, test_ends)
+        else:
+            # if that didn't make the boundary a negative example, move the
+            # right end up to the height of the left end
+            pos_ends = test_ends
+            top_right_end = [pos_ends[1][0], pos_ends[0][1]]
+            test_ends = [pos_ends[0], top_right_end]
+            test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
+            if (not label(test_top_boundary)):
+                # if that made the boundary a negative example, then find the
+                # top right limit between pos_ends and test_ends
+                top_right_limit = find_endpoint_bound(tolerance_a, tolerance_b,
+                                                      1, pos_ends, test_ends)
+            else:
+                # if that didn't make the boundary a negative example, then that
+                # must be the top right limit
+                top_right_limit = top_right_end
+    # next, find the bottom left end
+    # finally, find the bottom right end
+                
     pass
 
-def find_endpoint_bound(tolerance, vary_end, pos_ends, neg_ends):
-    assert isinstance(tolerance, float), "first argument of find_endpoint_bound should be the tolerance to which you want to find your endpoint bound and generate boundaries"
-    assert tolerance > 0, "tolerance argument to find_endpoint_bound should be positive"
+def find_endpoint_bound(tolerance_a, tolerance_b, vary_end, pos_ends, neg_ends):
+    assert isinstance(tolerance_a, float), "first argument of find_endpoint_bound should be the tolerance to which you want to generate boundaries"
+    assert tolerance_a > 0, "tolerance_a argument to find_endpoint_bound should be positive"
+    assert isinstance(tolerance_b, float), "first argument of find_endpoint_bound should be the tolerance to which you want to find your endpoint bound"
+    assert tolerance_b > 0, "tolerance_b argument to find_endpoint_bound should be positive"
     assert isinstance(vary_end, int), "vary_end should be an int in find_endpoint_bound"
     assert 0 <= vary_end and vary_end <= 1, "vary_end should be 0 or 1 in find_endpoint_bound"
     assert pos_ends[1 - vary_end] == neg_ends[1 - vary_end], "end you're not varying in find_endpoint_bound should be fixed between examples"
@@ -137,13 +241,14 @@ def find_endpoint_bound(tolerance, vary_end, pos_ends, neg_ends):
         vary_index = 1
     distance = abs(pos_ends[vary_end][vary_index]
                    - neg_ends[vary_end][vary_index])
-    num_iters = np.ceil(np.log2(distance / tolerance))
+    num_iters = np.ceil(np.log2(distance / tolerance_b))
+    num_iters = max(0, num_iters)
     for i in range(num_iters):
         test_ends = pos_ends
         test_val = 0.5*(pos_ends[vary_end][vary_index]
                         + neg_ends[vary_end][vary_index])
         test_ends[vary_end][vary_index] = test_val
-        test_boundary = endpoints_to_boundary(test_ends, tolerance)
+        test_boundary = endpoints_to_boundary(test_ends, tolerance_a)
         if label(test_boundary):
             pos_ends[vary_end][vary_index] = test_val
         else:
@@ -194,8 +299,9 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
     distance_max = sign*min(distances)
     # find number of iterations we need
     num_iters = np.ceil(np.log2((distance_max - distance_min) / tolerance_b))
+    num_iters = max(num_iters, 0)
     # do bisection on distance to move middle out
-    for i in num_iters:
+    for i in range(num_iters):
         test_distance = 0.5*(distance_max + distance_min)
         test_bump = move_middle_out([endpoints[index], endpoints[index + 1]],
                                     test_distance)
