@@ -285,4 +285,25 @@ def classify_trace(bounds, trace):
     # bounds is a tuple of lists of points. the lists have the same length.
     
     # ced works on this
-    pass
+    upper_bound, lower_bound = bounds[0], bounds[1]
+    trace_length = len(trace)
+    between = True
+
+    def find_surround(x, bound):
+        for i in range(len(bound)):
+            if bound[i][0] = x:
+                return i, i
+            elif bound[i][0] < x and bound[i+1][0] > x:
+                return i, i+1
+
+    for i in range(trace_length):
+        upper_index_1, upper_index_2 = find_surround(trace[i][0], upper_bound)
+        upper_weighted_y = upper_bound[upper_index_1][1] + upper_bound[upper_index_2][1] / 2 * 1.0
+        lower_index_1, lower_index_2 = find_surround(trace[i][0], lower_bound)
+        lower_weighted_y = lower_bound[lower_index_1][1] + lower_bound[lower_index_2][1] / 2 * 1.0
+        if trace[i][1] > upper_weighted_y or trace[i][1] < lower_weighted_y:
+            between = False
+
+    return between
+
+
