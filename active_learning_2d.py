@@ -1,8 +1,6 @@
-import z3
 import boundary_to_trace_v2
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import List
 
 def label(boundary):
     """
