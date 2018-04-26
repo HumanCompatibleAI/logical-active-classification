@@ -69,9 +69,10 @@ def move_middle_out(endpoints, distance):
     the return value is the final location of the midpoint.
 
     Argument types:
-    endpoints -- a tuple of points in parameter space
+    endpoints -- a list of points in parameter space
     distance -- a float that can be positive or negative
     """
+    assert isinstance(distance, float), "second argument of move_middle_out should be float"
     mpoint = midpoint(endpoints)
     length = np.sqrt((endpoints[0][0] - endpoints[1][0])**2
                      + (endpoints[0][1] - endpoints[1][1])**2)
@@ -79,31 +80,46 @@ def move_middle_out(endpoints, distance):
     direction = np.array([-1,1]) * ((my_ends[1] - my_ends[0])[::-1])
     return (mpoint + (distance/length)*direction).tolist()
 
-def find_endpoint_bounds(positive_example, tolerance, param_boundaries):
+def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
+                         param_boundaries):
     """
     Find upper+lower bounds for where the endpoints of the boundary can be
 
     Returns a tuple of 4 coordinates: (left_upper_bound, right_upper_bound,
     left_lower_bound, right_lower_bound)
     positive_example should be some boundary.
-    tolerance should be a float.
+    tolerance_a and tolerance_b should be floats.
     param_boundaries should be a list of lists giving lower and upper bounds for
     the possible parameter values. Specifically, it should be a list of the form
     [[lower_bound_x, upper_bound_x], [lower_bound_y, upper_bound_y]]
     """
+    assert isinstance(tolerance_a, float), "second argument of find_endpoint_bounds should be a float"
+    assert isinstance(tolerance_b, float), "third argument of find_endpoint_bounds should be a float"
+    assert tolerance_a > 0
+    assert tolerance_b > 0
     # TODO: write type asserts
     example_ends = [positive_example[0], positive_example[-1]]
     top_end = [example_ends[0][0], param_boundaries[1][1]]
-    test_top_boundary = endpoints_to_boundary([top_end, example_ends[1]])
+    test_top_boundary = endpoints_to_boundary([top_end, example_ends[1]],
+                                              tolerance_a)
+    # everything below is just nonsense
     if label(test_top_boundary):
         top_end = [example_ends[1][0], param_boundaries[1][1]]
-        test_top_boundary = endpoints_to_boundary[top_end, example_ends[1]]
+        test_top_boundary = endpoints_to_boundary([top_end, example_ends[1]],
+                                                  tolerance_a)
         if label(test_top_boundary):
-            # do something
-        else:
             # find where bottom-right end of boundary has to go to stop being
             # positive
+            right_end = [param_boundaries[0][1], example_ends[1][1]]
+            
+        else:
+            top_left_neg = [test_top_boundary[0], test_top_boundary[-1]]
+            top_left_bound = find_endpoint_bound(tolerance_b, 0, example_ends,
+                                                 top_left_neg)
     else:
+        top_left_neg = [test_top_boundary[0], test_top_boundary[-1]]
+        top_left_bound = find_endpoint_bound(tolerance_b, 0, example_ends,
+                                             top_left_neg)
         # find where bottom-right end of boundary has to go to stop being
         # positive
         # then do find_endpoint_bound given these pos and neg examples
@@ -116,13 +132,14 @@ def find_endpoint_bound(tolerance, vary_end, pos_ends, neg_ends):
     assert 0 <= vary_end and vary_end <= 1, "vary_end should be 0 or 1 in find_endpoint_bound"
     assert pos_ends[1 - vary_end] == neg_ends[1 - vary_end], "end you're not varying in find_endpoint_bound should be fixed between examples"
     # write more assertions later
+    # write docstring later
     if pos_ends[vary_end][0] != neg_ends[vary_end][0]:
         vary_index = 0
     else:
         vary_index = 1
     distance = abs(pos_ends[vary_end][vary_index]
                    - neg_ends[vary_end][vary_index])
-    num_iters = np.ceil((-1)*np.log2(tolerance / distance))
+    num_iters = np.ceil(np.log2(distance / tolerance))
     for i in range(num_iters):
         test_ends = pos_ends
         test_val = 0.5*(pos_ends[vary_end][vary_index]
@@ -133,11 +150,68 @@ def find_endpoint_bound(tolerance, vary_end, pos_ends, neg_ends):
             pos_ends[vary_end][vary_index] = test_val
         else:
             neg_ends[vary_end][vary_index] = test_val
-    return pos_ends
+    return pos_ends[vary_end]
+
+def distance_point_to_line(point, a, b, c):
+    """Distance from a point to the line ax + by + c = 0"""
+    return abs(a*point[0] + b*point[1] + c) / np.sqrt(a**2 + b**2)
 
 def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
                              is_positive):
-    pass
+    # document this at some point
+    assert isinstance(endpoints, list), "first argument of maximally_extend_segment should be list of endpoints"
+    assert len(endpoints) >= 2, "first argument of maximally_extend_segment should have at least 2 entries"
+    assert index > 0, "second argument of maximally_extend_segment should be positive index"
+    assert index < len(endpoints) - 1, "second argument of maximally_extend_segment should be index before end of list"
+    if is_positive:
+        sign = 1
+    else:
+        sign = -1
+    distance_min = 0
+    mid = midpoint([endpoints[index], endpoints[index + 1]])
+    distances = []
+    if index > 0:
+        # ensure we don't go beyond line connecting two previous endpoints
+        a = endpoints[index][1] - endpoints[index - 1][1]
+        b = endpoints[index - 1][0] - endpoints[index][0]
+        c = (endpoints[index - 1][0] * endpoints[index][1]
+             - endpoints[index][0] * endpoints[index - 1][1])
+        distances.append(distance_point_to_line(mid, a, b, c))
+    if index < len(endpoints) - 2:
+        # ensure we don't go beyond line connecting two next endpoints
+        a = endpoints[index + 2][1] - endpoints[index + 1][1]
+        b = endpoints[index + 1][0] - endpoints[index + 2][0]
+        c = (endpoints[index + 1][0] * endpoints[index + 2][1]
+             - endpoints[index + 2][0] * endpoints[index + 1][1])
+        distances.append(distance_point_to_line(mid, a, b, c))
+    # ensure we don't go beyond endpoints in this interval
+    length = np.sqrt((endpoints[index + 1][0] - endpoints[index][0])**2
+                     + (endpoints[index + 1][1] - endpoints[index][1])**2)
+    dist_to_top = ((-0.5)*length*(endpoints[index + 1][1] - endpoints[index][1])
+                   / (endpoints[index + 1][0] - endpoints[index][0]))
+    distances.append(dist_to_top)
+    dist_to_right = ((-0.5)*length*(endpoints[index+1][0] - endpoints[index][0])
+                     / (endpoints[index + 1][1] - endpoints[index][1]))
+    distances.append(dist_to_right)
+    distance_max = sign*min(distances)
+    # find number of iterations we need
+    num_iters = np.ceil(np.log2((distance_max - distance_min) / tolerance_b))
+    # do bisection on distance to move middle out
+    for i in num_iters:
+        test_distance = 0.5*(distance_max + distance_min)
+        test_bump = move_middle_out([endpoints[index], endpoints[index + 1]],
+                                    test_distance)
+        test_endpoints = (endpoints[0:index+1] + [test_bump]
+                          + endpoints[index + 1:])
+        test_boundary = endpoints_to_boundary(test_endpoints, tolerance_a)
+        if label(test_boundary):
+            distance_min = test_distance
+        else:
+            distance_max = test_distance
+    bump = move_middle_out([endpoints[index], endpoints[index + 1]],
+                           distance_min)
+    endpoints = endpoints[0:index + 1] + [bump] + endpoints[index + 1:]
+    return endpoints
 
 def interleave(small_list, big_list):
     """Interleave two lists of different length. First arg should be shorter."""
