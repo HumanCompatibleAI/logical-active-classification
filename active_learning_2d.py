@@ -210,8 +210,7 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
             distance_max = test_distance
     bump = move_middle_out([endpoints[index], endpoints[index + 1]],
                            distance_min)
-    endpoints = endpoints[0:index + 1] + [bump] + endpoints[index + 1:]
-    return endpoints
+    return bump
 
 def interleave(small_list, big_list):
     """Interleave two lists of different length. First arg should be shorter."""
