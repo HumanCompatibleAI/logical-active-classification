@@ -242,23 +242,46 @@ def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
             neg_upper_bounds[0], neg_upper_bounds[1])
     
 def find_endpoint_bound(tolerance_a, tolerance_b, vary_end, pos_ends, neg_ends):
+    """
+    Find the boundary of the convex set between a positive and negative example.
+
+    Arguments:
+    tolerance_a -- the tolerance to which we want to generate boundaries from
+                   endpoints
+    tolerance_b -- the tolerance to which we want to find the edges of the 
+                   convex set
+    vary_end -- the end that we want to vary to find the edge
+    pos_ends -- the ends of a positively classified boundary
+    neg_ends -- the ends of a negatively classified boundary
+    """
     assert isinstance(tolerance_a, float), "first argument of find_endpoint_bound should be the tolerance to which you want to generate boundaries"
     assert tolerance_a > 0, "tolerance_a argument to find_endpoint_bound should be positive"
     assert isinstance(tolerance_b, float), "first argument of find_endpoint_bound should be the tolerance to which you want to find your endpoint bound"
     assert tolerance_b > 0, "tolerance_b argument to find_endpoint_bound should be positive"
     assert isinstance(vary_end, int), "vary_end should be an int in find_endpoint_bound"
     assert 0 <= vary_end and vary_end <= 1, "vary_end should be 0 or 1 in find_endpoint_bound"
+    assert isinstance(pos_ends, list), "fourth argument of find_endpoint_bound should be a list of positive ends"
+    assert len(pos_ends) == 2, "fourth argument of find_endpoint_bound should have length 2, being two ends of a boundary"
+    assert isinstance(pos_ends[0], list) and isinstance(pos_ends[1], list), "fourth argument of find_endpoint_bound should be a list of two points"
+    assert len(pos_ends[0]) == 2 and len(pos_ends[1]) == 2, "both elements of pos_ends should be of length 2 in find_endpoint_bound"
+    assert isinstance(neg_ends, list), "fourth argument of find_endpoint_bound should be a list of negative ends"
+    assert len(neg_ends) == 2, "fourth argument of find_endpoint_bound should have length 2, being two ends of a boundary"
+    assert isinstance(neg_ends[0], list) and isinstance(neg_ends[1], list), "fourth argument of find_endpoint_bound should be a list of two points"
+    assert len(neg_ends[0]) == 2 and len(neg_ends[1]) == 2, "both elements of neg_ends should be of length 2 in find_endpoint_bound"
     assert pos_ends[1 - vary_end] == neg_ends[1 - vary_end], "end you're not varying in find_endpoint_bound should be fixed between examples"
-    # write more assertions later
-    # write docstring later
+    assert (pos_ends[vary_end][0] == neg_ends[vary_end][0]) or (pos_ends[vary_end][1] == neg_ends[vary_end][1]), "in find_endpoint_bound, the ends to vary between the positive and negative example should only be different in one dimension."
+    # figure out which dimension to vary
     if pos_ends[vary_end][0] != neg_ends[vary_end][0]:
         vary_index = 0
     else:
         vary_index = 1
+    # figure out how many iterations we need to do
     distance = abs(pos_ends[vary_end][vary_index]
                    - neg_ends[vary_end][vary_index])
     num_iters = np.ceil(np.log2(distance / tolerance_b))
     num_iters = max(0, num_iters)
+    # repeatedly go half-way between the two ends, see if that's positive or
+    # negative, update accordingly
     for i in range(num_iters):
         test_ends = pos_ends
         test_val = 0.5*(pos_ends[vary_end][vary_index]
