@@ -62,6 +62,7 @@ def move_middle_out(endpoints, distance):
     distance -- a float that can be positive or negative
     """
     assert isinstance(distance, float), "second argument of move_middle_out should be float"
+    # this is just a formula that you can figure out if you really want to
     mpoint = midpoint(endpoints)
     length = np.sqrt((endpoints[0][0] - endpoints[1][0])**2
                      + (endpoints[0][1] - endpoints[1][1])**2)
@@ -419,14 +420,18 @@ def find_positive_set(iterations, tolerance_a, tolerance_b, param_boundaries):
     assert tolerance_a > 0, "tolerance_a should be positive in find_positive_set"
     assert isinstance(tolerance_b, float), "tolerance_b should be a float in find_positive_set"
     assert tolerance_b > 0, "tolerance_b should be positive in find_positive_set"
-    
+
+    # get a positive example
     positive_example = get_positive_example()
+
+    # find where the endpoints can be in the convex set
     endpoint_bounds = find_endpoint_bounds(positive_example, tolerance_b,
                                            param_boundaries)
-
     upper_bound = [endpoint_bounds[0], endpoint_bounds[1]]
     lower_bound = [endpoint_bounds[2], endpoint_bounds[3]]
 
+    # repeatedly find the midpoints of the line segments in the lower and upper
+    # bounds, and move them out as far as possible
     for i in range(iterations):
         assert len(upper_bound) == len(lower_bound), "somehow upper and lower bounds became a different length in the loop of find_positive_set"
         upper_extensions = []
