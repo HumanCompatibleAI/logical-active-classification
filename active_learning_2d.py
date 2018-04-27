@@ -277,11 +277,34 @@ def distance_point_to_line(point, a, b, c):
 
 def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
                              is_positive):
-    # document this at some point
+    """
+    Find the furthest out you can go between endpoints[index] and index+1.
+
+    Arguments:
+    endpoints -- list of endpoints of line segments connected together.
+    index -- index of endpoints. We're going to return a point between 
+             endpoints[index] and endpoints[index + 1].
+    tolerance_a -- float, representing how much error we're OK with when 
+                   generating boundaries from list of endpoints
+    tolerance_b -- float, representing how much error we're OK with when 
+                   approximating the convex set
+    is_positive -- bool, representing whether we're extending a point out in the
+                   positive direction or negative direction
+
+    Returns:
+    A point that is on the perpendicular bisector of the line segment between
+    endpoints[index] and endpoints[index + 1], such that if that point were 
+    further out and included in endpoints, the corresponding boundary would 
+    barely be outside the convex set.
+    """
     assert isinstance(endpoints, list), "first argument of maximally_extend_segment should be list of endpoints"
     assert len(endpoints) >= 2, "first argument of maximally_extend_segment should have at least 2 entries"
     assert index > 0, "second argument of maximally_extend_segment should be positive index"
     assert index < len(endpoints) - 1, "second argument of maximally_extend_segment should be index before end of list"
+    assert isinstance(tolerance_a, float), "third argument of maximally_extend_segment should be a float representing how finely we're generating boundaries"
+    assert isinstance(tolerance_b, float), "fourth argument of maximally_extend_segment should be a float representing how finely we're approximating the convex set"
+    assert tolerance_a > 0, "tolerance_a should be positive in maximally_extend_segment"
+    assert tolerance_b > 0, "tolerance_b should be positive in maximally_extend_segment"
     if is_positive:
         sign = 1
     else:
