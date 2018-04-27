@@ -46,15 +46,6 @@ def endpoints_to_boundary(list_endpoints, tolerance):
             boundary.append(waypoint)
     return boundary
 
-# # test of endpoints_to_boundary
-# my_list_endpoints = [[0,1], [0.7,0.5], [1,0]]
-# my_tolerance = 0.01
-# my_boundary = endpoints_to_boundary(my_list_endpoints, my_tolerance)
-# # print(my_boundary)
-# # print(zip(*my_boundary))
-# plt.scatter(*zip(*my_boundary))
-# plt.show()
-
 def move_middle_out(endpoints, distance):
     """
     take a line segment, return one with the middle moved out perpendicularly
@@ -78,10 +69,10 @@ def move_middle_out(endpoints, distance):
     direction = np.array([-1,1]) * ((my_ends[1] - my_ends[0])[::-1])
     return (mpoint + (distance/length)*direction).tolist()
 
-def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
-                         param_boundaries):
+def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
+                               param_boundaries):
     """
-    Find upper+lower bounds for where the endpoints of the boundary can be
+    Find upper bounds for where the endpoints of the boundary can be
 
     Returns a tuple of 4 coordinates: (left_upper_bound, right_upper_bound,
     left_lower_bound, right_lower_bound)
@@ -91,11 +82,12 @@ def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
     the possible parameter values. Specifically, it should be a list of the form
     [[lower_bound_x, upper_bound_x], [lower_bound_y, upper_bound_y]]
     """
+    assert isinstance(positive_example, list), "first argument of find_endpoint_bounds should be a boundary"
     assert isinstance(tolerance_a, float), "second argument of find_endpoint_bounds should be a float"
     assert isinstance(tolerance_b, float), "third argument of find_endpoint_bounds should be a float"
-    assert tolerance_a > 0
-    assert tolerance_b > 0
-    # TODO: write more type asserts
+    assert tolerance_a > 0, "second argument of find_endpoint_bounds should be positive"
+    assert tolerance_b > 0, "third argument of find_endpoint_bounds should be positive"
+    assert isinstance(param_boundaries, list) and len(param_boundaries) == 2 and isinstance(param_boundaries[0], list) and len(param_boundaries[0]) == 2 and isinstance(param_boundaries[1], list) and len(param_boundaries[1]) == 2, "fourth argument of find_endpoint_bounds should be list of starting and ending points in parameter space"
     have_found_top_right_end = False
     example_ends = [positive_example[0], positive_example[-1]]
     pos_ends = example_ends
@@ -220,11 +212,35 @@ def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                 # if that didn't make the boundary a negative example, then that
                 # must be the top right limit
                 top_right_limit = top_right_end
-    # next, find the bottom left end
-    # finally, find the bottom right end
-                
-    pass
+    return (top_left_limit, top_right_limit)
 
+
+def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
+                         param_boundaries):
+    """
+    Find upper and lower bounds for where the endpoints of the boundary can be
+
+    Returns a tuple of 4 coordinates: (left_upper_bound, right_upper_bound,
+    left_lower_bound, right_lower_bound)
+    positive_example should be some boundary.
+    tolerance_a and tolerance_b should be floats.
+    param_boundaries should be a list of lists giving lower and upper bounds for
+    the possible parameter values. Specifically, it should be a list of the form
+    [[lower_bound_x, upper_bound_x], [lower_bound_y, upper_bound_y]]
+    """
+    # use helper function to find upper bounds
+    upper_bounds = find_upper_endpoint_bounds(positive_example, tolerance_a,
+                                              tolerance_b, param_boundaries)
+    # negate everything, find upper bounds of the negated thing, then negate
+    # that to find lower bounds
+    neg_positive_example = [[(-1)*a for a in pair] for pair in positive_example]
+    neg_param_boundaries = [[(-1)*a for a in pair] for pair in param_boundaries]
+    neg_upper_bounds = find_upper_endpoint_bounds(neg_positive_example,
+                                                  tolerance_a, tolerance_b,
+                                                  neg_param_boundaries)
+    return (upper_bounds[0], upper_bounds[1],
+            neg_upper_bounds[0], neg_upper_bounds[1])
+    
 def find_endpoint_bound(tolerance_a, tolerance_b, vary_end, pos_ends, neg_ends):
     assert isinstance(tolerance_a, float), "first argument of find_endpoint_bound should be the tolerance to which you want to generate boundaries"
     assert tolerance_a > 0, "tolerance_a argument to find_endpoint_bound should be positive"
