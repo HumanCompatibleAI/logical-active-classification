@@ -2,7 +2,7 @@ import boundary_to_trace_v2
 import numpy as np
 import matplotlib.pyplot as plt
 
-def label(boundary):
+def label(boundary, should_invert=False, param_boundaries=[]):
     """
     Takes a boundary, and returns its proper label, which is True or False.
 
@@ -71,33 +71,41 @@ def move_middle_out(endpoints, distance):
     return (mpoint + (distance/length)*direction).tolist()
 
 def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
-                               param_boundaries):
+                                 param_boundaries, should_invert):
     """
-    Find upper bounds for where the endpoints of the boundary can be
+    Find bounds for where the endpoints of the boundary can be
 
     Returns a tuple of 4 coordinates: (left_upper_bound, right_upper_bound,
     left_lower_bound, right_lower_bound)
+
     positive_example should be some boundary.
     tolerance_a and tolerance_b should be floats.
     param_boundaries should be a list of lists giving lower and upper bounds for
     the possible parameter values. Specifically, it should be a list of the form
     [[lower_bound_x, upper_bound_x], [lower_bound_y, upper_bound_y]]
+    should_invert should be a bool telling you if you want to invert the 
+    boundary before labelling it. Ideally, it is true when we are secretly 
+    actually finding lower bounds.
     """
-    assert isinstance(positive_example, list), "first argument of find_endpoint_bounds should be a boundary"
-    assert isinstance(tolerance_a, float), "second argument of find_endpoint_bounds should be a float"
-    assert isinstance(tolerance_b, float), "third argument of find_endpoint_bounds should be a float"
-    assert tolerance_a > 0, "second argument of find_endpoint_bounds should be positive"
-    assert tolerance_b > 0, "third argument of find_endpoint_bounds should be positive"
-    assert isinstance(param_boundaries, list) and len(param_boundaries) == 2 and isinstance(param_boundaries[0], list) and len(param_boundaries[0]) == 2 and isinstance(param_boundaries[1], list) and len(param_boundaries[1]) == 2, "fourth argument of find_endpoint_bounds should be list of starting and ending points in parameter space"
+    assert isinstance(positive_example, list), "first argument of find_upper_endpoint_bounds should be a boundary"
+    assert isinstance(tolerance_a, float), "second argument of find_upper_endpoint_bounds should be a float"
+    assert isinstance(tolerance_b, float), "third argument of find_upper_endpoint_bounds should be a float"
+    assert tolerance_a > 0, "second argument of find_upper_endpoint_bounds should be positive"
+    assert tolerance_b > 0, "third argument of find_upper_endpoint_bounds should be positive"
+    assert isinstance(param_boundaries, list) and len(param_boundaries) == 2 and isinstance(param_boundaries[0], list) and len(param_boundaries[0]) == 2 and isinstance(param_boundaries[1], list) and len(param_boundaries[1]) == 2, "fourth argument of find_upper_endpoint_bounds should be list of starting and ending points in parameter space"
+    assert isinstance(should_invert, bool), "fifth argument of find_upper_endpoint_bounds should be bool denoting whether or not boundaries should be inverted in the labelling function"
+
     have_found_top_right_end = False
+    
     example_ends = [positive_example[0], positive_example[-1]]
     pos_ends = example_ends
-    # first, move top left end of positive example to maximum y value, and check
-    # if that makes it negative.
+
+    # first, move top left end of positive example to maximum y value, and
+    # check if that makes it negative.
     top_left_end = [pos_ends[0][0], param_boundaries[1][1]]
     test_ends = [top_left_end, pos_ends[1]]
     test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
-    if (not label(test_top_boundary)):
+    if (not label(test_top_boundary, should_invert, param_boundaries)):
         # if result is negative, then find the limit for the top left end
         # between our positive example and the result
         top_left_limit = find_endpoint_bound(tolerance_a, tolerance_b, 0,
@@ -109,7 +117,7 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
         top_left_end = [pos_ends[1][0], param_boundaries[1][1]]
         test_ends = [top_left_end, pos_ends[1]]
         test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
-        if (not label(test_top_boundary)):
+        if (not label(test_top_boundary, should_invert, param_boundaries)):
             # if this new result is negative, find the limit for the top left
             # end between the old positive result and the new negative results
             top_left_limit = find_endpoint_bound(tolerance_a, tolerance_b, 0,
@@ -122,7 +130,7 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
             top_right_end = [param_boundaries[0][1], pos_ends[1][1]]
             test_ends = [pos_ends[0], top_right_end]
             test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
-            if (not label(test_top_boundary)):
+            if (not label(test_top_boundary, should_invert, param_boundaries)):
                 # if this makes the boundary negative, find the limit for the
                 # top right end
                 top_right_limit = find_endpoint_bound(tolerance_a, tolerance_b,
@@ -134,7 +142,8 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                 test_ends = [top_left_end, pos_ends[1]]
                 test_top_boundary = endpoints_to_boundary(test_ends,
                                                           tolerance_a)
-                if (not label(test_top_boundary)):
+                if (not label(test_top_boundary, should_invert,
+                              param_boundaries)):
                     # if that makes it negative, find the limit of where the top
                     # end can go
                     top_left_limit = find_endpoint_bound(tolerance_a,
@@ -153,7 +162,8 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                 test_ends = [pos_ends[0], top_right_end]
                 test_top_boundary = endpoints_to_boundary(test_ends,
                                                           tolerance_a)
-                if (not label(test_top_boundary)):
+                if (not label(test_top_boundary, should_invert,
+                              param_boundaries)):
                     # if moving the right end as far up as possible makes it
                     # negative, find how far up it can go
                     top_right_limit = find_endpoint_bound(tolerance_a,
@@ -166,7 +176,8 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                     test_ends = [top_left_end, top_right_limit]
                     test_top_boundary = endpoints_to_boundary(test_ends,
                                                               tolerance_a)
-                    if (not label(test_top_boundary)):
+                    if (not label(test_top_boundary, should_invert,
+                                  param_boundaries)):
                         # if that did make it negative, find the top left limit
                         # between those
                         top_left_limit = find_endpoint_bound(tolerance_a,
@@ -192,7 +203,7 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
         top_right_end = [param_boundaries[0][1], pos_ends[1][1]]
         test_ends = [pos_ends[0], top_right_end]
         test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
-        if (not label(test_top_boundary)):
+        if (not label(test_top_boundary, should_invert, param_boundaries)):
             # if that makes the boundary a negative example, then find the top
             # right limit between pos_ends and test_ends
             top_right_limit = find_endpoint_bound(tolerance_a, tolerance_b, 1,
@@ -204,7 +215,7 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
             top_right_end = [pos_ends[1][0], pos_ends[0][1]]
             test_ends = [pos_ends[0], top_right_end]
             test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
-            if (not label(test_top_boundary)):
+            if (not label(test_top_boundary, should_invert, param_boundaries)):
                 # if that made the boundary a negative example, then find the
                 # top right limit between pos_ends and test_ends
                 top_right_limit = find_endpoint_bound(tolerance_a, tolerance_b,
@@ -215,6 +226,26 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                 top_right_limit = top_right_end
     return (top_left_limit, top_right_limit)
 
+def invert(boundary, param_boundaries):
+    """
+    Takes a boundary, and rotates it by 180 degrees in parameter space
+
+    Arguments:
+    boundary -- a boundary
+    param_boundaries -- list of lists giving upper and lower bounds for possible
+                        parameter values. Specifically, should be of the form
+                        [[lower_bound_x, upper_bound_x], 
+                         [lower_bound_y, upper_bound_y]]
+
+    Note that a 180 degree rotation is the same as flipping vertically and then
+    horizontally, which is wat we will actually do
+    """
+    new_boundary = []
+    for point in boundary:
+        new_x = param_boundaries[0][0] + param_boundaries[0][1] - point[0]
+        new_y = param_boundaries[1][0] + param_boundaries[1][1] - point[1]
+        new_boundary.append([new_x, new_y])
+    return new_boundary
 
 def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                          param_boundaries):
@@ -231,16 +262,19 @@ def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
     """
     # use helper function to find upper bounds
     upper_bounds = find_upper_endpoint_bounds(positive_example, tolerance_a,
-                                              tolerance_b, param_boundaries)
-    # negate everything, find upper bounds of the negated thing, then negate
+                                              tolerance_b, param_boundaries,
+                                              False)
+    # negate the example, find upper bounds of the negated thing, then negate
     # that to find lower bounds
-    neg_positive_example = [[(-1)*a for a in pair] for pair in positive_example]
-    neg_param_boundaries = [[(-1)*a for a in pair] for pair in param_boundaries]
-    neg_upper_bounds = find_upper_endpoint_bounds(neg_positive_example,
+    # but instead of negating, you want to take the limits minus the example,
+    # so that you remain within the same parameter boundaries
+    inv_pos_example = invert(positive_example, param_boundaries)
+    inv_upper_bounds = find_upper_endpoint_bounds(inv_pos_example,
                                                   tolerance_a, tolerance_b,
-                                                  neg_param_boundaries)
+                                                  param_boundaries, True)
+    lower_bounds = invert(inv_upper_bounds, param_boundaries)
     return (upper_bounds[0], upper_bounds[1],
-            neg_upper_bounds[0], neg_upper_bounds[1])
+            lower_bounds[0], lower_bounds[1])
     
 def find_endpoint_bound(tolerance_a, tolerance_b, vary_end, pos_ends, neg_ends):
     """
