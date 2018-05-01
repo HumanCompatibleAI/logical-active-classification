@@ -521,11 +521,11 @@ def find_positive_set(iterations, tolerance_a, tolerance_b, param_boundaries):
     assert tolerance_b > 0, "tolerance_b should be positive in find_positive_set"
 
     # get a positive example
-    positive_example = get_positive_example()
+    positive_example = get_positive_example(param_boundaries)
 
     # find where the endpoints can be in the convex set
-    endpoint_bounds = find_endpoint_bounds(positive_example, tolerance_b,
-                                           param_boundaries)
+    endpoint_bounds = find_endpoint_bounds(positive_example, tolerance_a,
+                                           tolerance_b, param_boundaries)
     upper_bound = [endpoint_bounds[0], endpoint_bounds[1]]
     lower_bound = [endpoint_bounds[2], endpoint_bounds[3]]
 
@@ -580,3 +580,6 @@ def classify_trace(bounds, trace):
             between = False
 
     return between
+
+# bounds = find_positive_set(3, 0.1, 0.1, [[0.1, 19.9], [0.1, 0.9]])
+# print(bounds)
