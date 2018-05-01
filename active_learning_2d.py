@@ -1,9 +1,13 @@
-import boundary_to_trace_v2
+import boundary_to_trace_v4 as bt
+import trace_to_boundary as tb
 import numpy as np
 import matplotlib.pyplot as plt
-import random
+import random as random
+import z3
 
-def label(boundary, should_invert=False, param_boundaries=[]):
+def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
+                                                           [0,1.0]],
+          epsilon=0.05, num_points=100, lipschitz_param=0.05):
     """
     Takes a boundary, and returns its proper label, which is True or False.
 
@@ -15,13 +19,39 @@ def label(boundary, should_invert=False, param_boundaries=[]):
         my_boundary = invert(boundary, param_boundaries)
     else:
         my_boundary = boundary
-    pass
+
+    xs = [z3.Real('x%d' % i) for i in range(num_points)]
+    us = [z3.Real('u%d' % i) for i in range(num_points)]
+
+    def make_phi(xs, us):
+        # this basically makes a formula encoding dynamics of a system xs
+        # controlled by us
+        formula = True
+        for i in range(num_points - 1):
+            formula = z3.And(formula, xs[i+1] == xs[i] + us[i],
+                             xs[i+1] - xs[i] <= lipschitz_param,
+                             xs[i] - xs[i+1] <= lipschitz_param,
+                             xs[i] >= 0, xs[i+1] >= 0)
+        return formula
+        
+    trace = bt.trace(my_boundary, epsilon, num_points, xs,
+                     param_boundaries[0][1], make_phi(xs, us))
+
+    class_val = True
+    
+    for point in trace:
+        if point[0] >= 10:
+            class_val = class_val and (point[1] <= (-0.08)*point[0] + 1.8)
+
+    return class_val
 
 def get_positive_example(param_boundaries):
-    """Randomly samples a boundary that should be classified positively
+    """Randomly samples a boundary that should be classified positively.
 
     This will be specific to one particular hypothesis.
     """
+    # note that this generates quite a crazy trace - it might be unrealistic,
+    # and maybe we should change it
     pos_trace = []
     for i in range(101):
         x_val = ((param_boundaries[0][1] - param_boundaries[0][0])*(i/100.0)
