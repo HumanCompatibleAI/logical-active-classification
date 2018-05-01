@@ -41,8 +41,8 @@ def endpoints_to_boundary(list_endpoints, tolerance):
         n = int(np.floor(total_dist / tolerance))
         for j in range(n):
             frac = j * tolerance / total_dist
-            waypoint = [frac*start[0] + (1-frac)*end[0],
-                        frac*start[1] + (1-frac)*end[1]]
+            waypoint = [(1 - frac)*start[0] + frac*end[0],
+                        (1 - frac)*start[1] + frac*end[1]]
             boundary.append(waypoint)
     return boundary
 
