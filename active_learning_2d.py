@@ -52,6 +52,8 @@ def get_positive_example(param_boundaries):
     """
     # note that this generates quite a crazy trace - it might be unrealistic,
     # and maybe we should change it
+
+    # it's also not really uniform in boundary-space (whatever that means)
     pos_trace = []
     for i in range(101):
         x_val = ((param_boundaries[0][1] - param_boundaries[0][0])*(i/100.0)
@@ -66,7 +68,12 @@ def get_positive_example(param_boundaries):
                  - param_boundaries[0][1]*m)
             y_val = random.uniform(param_boundaries[1][0], m*x_val + b)
         pos_trace.append([x_val, y_val])
-    pass
+
+    boundary = tb.boundary(pos_trace)
+    return boundary
+
+# my_bound = get_positive_example([[0, 20], [0,1]])
+# print(my_bound)
 
 def midpoint(endpoints):
     """Return the midpoint of a list of two endpoints"""
