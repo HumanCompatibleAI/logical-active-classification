@@ -70,6 +70,11 @@ def get_positive_example(param_boundaries):
         pos_trace.append([x_val, y_val])
 
     boundary = tb.boundary(pos_trace)
+    nice_boundary = [point for point in boundary
+                     if (point[0] >= param_boundaries[0][0]
+                         and point[0] <= param_boundaries[0][1]
+                         and point[1] >= param_boundaries[1][0]
+                         and point[1] <= param_boundaries[1][1])]
     return boundary
 
 # my_bound = get_positive_example([[0, 20], [0,1]])
