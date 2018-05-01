@@ -1,6 +1,7 @@
 import boundary_to_trace_v2
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 
 def label(boundary, should_invert=False, param_boundaries=[]):
     """
@@ -9,10 +10,32 @@ def label(boundary, should_invert=False, param_boundaries=[]):
     Correct implementation will depend on context, and in the extreme case will
     require computation done by the human.
     """
+    # add type assertions
+    if should_invert:
+        my_boundary = invert(boundary, param_boundaries)
+    else:
+        my_boundary = boundary
     pass
 
-def get_positive_example():
-    """Somehow samples a boundary that should be classified positively"""
+def get_positive_example(param_boundaries):
+    """Randomly samples a boundary that should be classified positively
+
+    This will be specific to one particular hypothesis.
+    """
+    pos_trace = []
+    for i in range(101):
+        x_val = ((param_boundaries[0][1] - param_boundaries[0][0])*(i/100.0)
+                 + param_boundaries[0][0])
+        if i < 50:
+            y_val = random.uniform(param_boundaries[1][0],
+                                   param_boundaries[1][1])
+        else:
+            m = (8.0/5.0)*((param_boundaries[1][1] - param_boundaries[1][0])
+                           / (param_boundaries[0][0] - param_boundaries[0][1]))
+            b = (0.8*param_boundaries[1][0] + 0.2*param_boundaries[1][1]
+                 - param_boundaries[0][1]*m)
+            y_val = random.uniform(param_boundaries[1][0], m*x_val + b)
+        pos_trace.append([x_val, y_val])
     pass
 
 def midpoint(endpoints):
