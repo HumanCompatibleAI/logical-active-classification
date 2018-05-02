@@ -9,14 +9,14 @@ random.seed(708)
 
 def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
                                                            [0,1.0]],
-          epsilon=0.05, num_points=200, lipschitz_param=0.05):
+          epsilon=0.02, num_points=200, lipschitz_param=0.05):
     """
     Takes a boundary, and returns its proper label, which is True or False.
 
     Correct implementation will depend on context, and in the extreme case will
     require computation done by the human.
     """
-    # add type assertions
+    # TODO: add type assertions
     if should_invert:
         my_boundary = invert(boundary, param_boundaries)
     else:
@@ -25,6 +25,8 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
     # print("in the label function, should_invert is", should_invert)
     # print("boundary that label is synthesising", my_boundary)
 
+    # print("in the label function")
+    
     xs = [z3.Real('x%d' % i) for i in range(num_points)]
     us = [z3.Real('u%d' % i) for i in range(num_points)]
 
@@ -41,6 +43,8 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
 
     trace = bt.trace(my_boundary, epsilon, num_points, xs,
                      param_boundaries[0][1], make_phi(xs, us))
+
+    # print("trace that is being labelled is", trace)
 
     class_val = True
     
@@ -59,28 +63,39 @@ def get_positive_example(param_boundaries):
     # and maybe we should change it
 
     # it's also not really uniform in boundary-space (whatever that means)
-    pos_trace = []
-    for i in range(101):
-        x_val = ((param_boundaries[0][1] - param_boundaries[0][0])*(i/100.0)
-                 + param_boundaries[0][0])
-        if i < 50:
-            y_val = random.uniform(param_boundaries[1][0],
-                                   param_boundaries[1][1])
-        else:
-            m = (8.0/5.0)*((param_boundaries[1][1] - param_boundaries[1][0])
-                           / (param_boundaries[0][0] - param_boundaries[0][1]))
-            b = (0.8*param_boundaries[1][0] + 0.2*param_boundaries[1][1]
-                 - param_boundaries[0][1]*m)
-            y_val = random.uniform(param_boundaries[1][0], m*x_val + b)
-        pos_trace.append([x_val, y_val])
+    # print("We are now inside get_positive_example")
 
+    # print("In get_positive_example.")
+    
+    pos_trace = []
+    for i in range(201):
+        x_val = ((param_boundaries[0][1] - param_boundaries[0][0])*(i/200.0)
+                 + param_boundaries[0][0])
+        m = (-0.8)/19.8
+        b = 0.9 - 0.1*m
+        y_val = m*x_val + b
+        pos_trace.append([x_val, y_val])
+    
     boundary = tb.boundary(pos_trace)
     nice_boundary = [point for point in boundary
                      if (point[0] >= param_boundaries[0][0]
                          and point[0] <= param_boundaries[0][1]
                          and point[1] >= param_boundaries[1][0]
                          and point[1] <= param_boundaries[1][1])]
-    return boundary
+
+    true_label = True
+    for point in pos_trace:
+        if point[0] >= 10:
+            true_label = true_label and (point[1] <= (-0.08)*point[0] + 1.8)
+
+    # print("positive trace we generate is", pos_trace)
+            
+    # print("true classification of your trace is", true_label)
+
+    # print("boundary we generate is", nice_boundary)
+    
+    assert label(nice_boundary), "the positive example you generated isn't actually labelled positive!"
+    return nice_boundary
 
 # my_bound = get_positive_example([[0, 20], [0,1]])
 # print(my_bound)
@@ -165,16 +180,26 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
     assert isinstance(param_boundaries, list) and len(param_boundaries) == 2 and isinstance(param_boundaries[0], list) and len(param_boundaries[0]) == 2 and isinstance(param_boundaries[1], list) and len(param_boundaries[1]) == 2, "fourth argument of find_upper_endpoint_bounds should be list of starting and ending points in parameter space"
     assert isinstance(should_invert, bool), "fifth argument of find_upper_endpoint_bounds should be bool denoting whether or not boundaries should be inverted in the labelling function"
 
+    # print("now inside find_upper_endpoint_bounds")
+    # print("should_invert is", should_invert)
+    
     have_found_top_right_end = False
     
     example_ends = [positive_example[0], positive_example[-1]]
+
+    # print("positive ends to work with", example_ends)
+    
     pos_ends = example_ends
 
     # first, move top left end of positive example to maximum y value, and
     # check if that makes it negative.
     top_left_end = [pos_ends[0][0], param_boundaries[1][1]]
     test_ends = [top_left_end, pos_ends[1]]
+    # print("first boundary tried in find_upper_endpoint_bounds", test_ends)
     test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
+    # print("actual full boundary", test_top_boundary)
+    # print("classification of that boundary (maybe inverted)",
+    #       label(test_top_boundary, should_invert, param_boundaries))
     if (not label(test_top_boundary, should_invert, param_boundaries)):
         # if result is negative, then find the limit for the top left end
         # between our positive example and the result
@@ -323,7 +348,7 @@ def invert(boundary, param_boundaries):
                          [lower_bound_y, upper_bound_y]]
 
     Note that a 180 degree rotation is the same as flipping vertically and then
-    horizontally, which is wat we will actually do
+    horizontally, which is what we will actually do
     """
     new_boundary = []
     for point in boundary:
@@ -345,6 +370,8 @@ def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
     the possible parameter values. Specifically, it should be a list of the form
     [[lower_bound_x, upper_bound_x], [lower_bound_y, upper_bound_y]]
     """
+    # print("In find_endpoint_bounds.")
+    
     # use helper function to find upper bounds
     upper_bounds = find_upper_endpoint_bounds(positive_example, tolerance_a,
                                               tolerance_b, param_boundaries,
@@ -555,14 +582,16 @@ def find_positive_set(iterations, tolerance_a, tolerance_b, param_boundaries):
     # get a positive example
     positive_example = get_positive_example(param_boundaries)
 
+    # print("Positive example gained.")
+
     # find where the endpoints can be in the convex set
     endpoint_bounds = find_endpoint_bounds(positive_example, tolerance_a,
                                            tolerance_b, param_boundaries)
     upper_bound = [endpoint_bounds[0], endpoint_bounds[1]]
     lower_bound = [endpoint_bounds[2], endpoint_bounds[3]]
 
-    print("after finding endpoint bounds, upper bound is", upper_bound)
-    print("after finding endpoint bounds, lower bound is", lower_bound)
+    # print("after finding endpoint bounds, upper bound is", upper_bound)
+    # print("after finding endpoint bounds, lower bound is", lower_bound)
     
     # repeatedly find the midpoints of the line segments in the lower and upper
     # bounds, and move them out as far as possible
@@ -616,5 +645,5 @@ def classify_trace(bounds, trace):
 
     return between
 
-bounds = find_positive_set(3, 0.1, 0.2, [[0.1, 19.9], [0.1, 0.9]])
+bounds = find_positive_set(4, 0.1, 0.4, [[0.1, 19.9], [0.1, 0.9]])
 print(bounds)

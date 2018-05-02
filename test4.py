@@ -2,13 +2,15 @@ import z3
 import boundary_to_trace_v4 as bt
 num = 100
 
-xs = ['x%d' % i for i in range(num)]
-us = ['u%d' % i for i in range(num)]
+# xs = ['x%d' % i for i in range(num)]
+# us = ['u%d' % i for i in range(num)]
 
-for i in range(num):
-    xs[i] = z3.Real('x%d' % i)
-    us[i] = z3.Real('u%d' % i)
+# for i in range(num):
+#     xs[i] = z3.Real('x%d' % i)
+#     us[i] = z3.Real('u%d' % i)
 
+xs = [z3.Real('x%d' % i) for i in range(num)]
+us = [z3.Real('u%d' % i) for i in range(num)]
 
 A = 1
 B = 1

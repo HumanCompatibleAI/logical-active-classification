@@ -71,7 +71,7 @@ def output_trace(phi, psi, vs, num):
     S.check()
     m = S.model()
     y = [i for i in range(num)]
-    x = [i * 1.0 / 5 for i in y]
+    x = [i * (num / 2000.0) for i in y]
     for i in range(num):
         y[i] = m[vs[i]].numerator_as_long() * 1.0 / m[vs[i]].denominator_as_long()
     trace = [[x[i], y[i]] for i in range(len(x))]
