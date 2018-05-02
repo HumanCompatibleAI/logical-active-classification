@@ -428,13 +428,12 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
     """
     assert isinstance(endpoints, list), "first argument of maximally_extend_segment should be list of endpoints"
     assert len(endpoints) >= 2, "first argument of maximally_extend_segment should have at least 2 entries"
-    assert index > 0, "second argument of maximally_extend_segment should be positive index"
+    assert index > 0, "second argument of maximally_extend_segment should be positive index, but it's actually %d" % index
     assert index < len(endpoints) - 1, "second argument of maximally_extend_segment should be index before end of list"
     assert isinstance(tolerance_a, float), "third argument of maximally_extend_segment should be a float representing how finely we're generating boundaries"
     assert isinstance(tolerance_b, float), "fourth argument of maximally_extend_segment should be a float representing how finely we're approximating the convex set"
     assert tolerance_a > 0, "tolerance_a should be positive in maximally_extend_segment"
     assert tolerance_b > 0, "tolerance_b should be positive in maximally_extend_segment"
-    # print("index in maximally_extend_segment is", index)
     if is_positive:
         sign = 1
     else:
