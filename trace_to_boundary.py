@@ -30,34 +30,40 @@ def compute_boundary(trace, eps=0.1):
     return list(fn.pluck(1, fn.first(fn.dropwhile(lambda x :-min(fn.pluck(0, x))> eps, refinements))))
 
 def boundary(trace):
-	np_boundary = np.array(trace)
-	df = pd.DataFrame(np_boundary, columns=['X', 'Y']).set_index('X')
-	t = from_pandas(df)
-	bound = compute_boundary(t, 0.01)
-	top = sorted([r.top for r in bound])
-	t_copy = list(top)
-	bottom = sorted([r.bot for r in bound])
-	b_copy = list(bottom)
-	size = len(top)
-	for i in range(size):
-		top[i] = t_copy[size - i - 1]
-		top[i][0], top[i][1] = top[i][1], top[i][0]
-		bottom[i]  = b_copy[size - i - 1]
-		bottom[i][0], bottom[i][1] = bottom[i][1], bottom[i][0] 
-	boundary = [[0, 0] for i in range(size)]
-	for i in range(size):
-		boundary[i][0] = bottom[i][0]
-		boundary[i][1] = top[i][1]
-	boundary.append([top[size-1][0], bottom[size-1][1]])
-	return boundary
-	#print(top)
-	#print(bottom)
-	#print(boundary)
-	#x_axis = [boundary[i][0] for i in range(len(boundary))]
-	#y_axis = [boundary[i][1] for i in range(len(boundary))]
-	#plt.plot(x_axis, y_axis)
-	#plt.show()
+    np_boundary = np.array(trace)
+    df = pd.DataFrame(np_boundary, columns=['X', 'Y']).set_index('X')
+    t = from_pandas(df)
+    bound = compute_boundary(t, 0.01)
+    top = sorted([r.top for r in bound])
+    t_copy = list(top)
+    bottom = sorted([r.bot for r in bound])
+    b_copy = list(bottom)
+    size = len(top)
+    for i in range(size):
+        top[i] = t_copy[size - i - 1]
+        top[i][0], top[i][1] = top[i][1], top[i][0]
+        bottom[i]  = b_copy[size - i - 1]
+        bottom[i][0], bottom[i][1] = bottom[i][1], bottom[i][0]
+    for i in range(size-1):
+        if top[i][0] > top[i+1][0]:
+            top[i][0], top[i+1][0] = top[i+1][0], top[i][0]
+        if bottom[i][0] > bottom[i+1][0]:
+            bottom[i][0], bottom[i+1][0] = bottom[i+1][0], bottom[i][0]
 
+    boundary = []
+    for i in range(size):
+        if i == 0 or round(bottom[i][0]) != round(bottom[i-1][0]):
+            boundary.append([round(bottom[i][0]), top[i][1]])
+    if round(top[size-1][0]) != round(bottom[size-1][0]):
+        boundary.append([round(top[size-1][0]), bottom[size-1][1]])
+    return boundary
+    #print(top)
+    #print(bottom)
+    #print(boundary)
+    #x_axis = [boundary[i][0] for i in range(len(boundary))]
+    #y_axis = [boundary[i][1] for i in range(len(boundary))]
+    #plt.plot(x_axis, y_axis)
+    #plt.show()
 
 
 

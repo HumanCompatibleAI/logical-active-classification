@@ -2,6 +2,15 @@ import z3
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import funcy as fn
+
+
+import funcy
+@fn.autocurry
+def phi(x, params):
+    h, tau = params
+    t_plus.slice(tau, None)
+    return all(map(lambda y:y[1] <= h, x))
 
 def pre_process(boundary, eps): #boundary is a 2-d array: [[x_1, y_1],[x_2,y_2], ...]. Normally, x is tau and y is h.
     size = len(boundary)
@@ -20,6 +29,18 @@ def pre_process(boundary, eps): #boundary is a 2-d array: [[x_1, y_1],[x_2,y_2],
 
     return b_plus, b_minus
 
+def non_perp_process(boundary, eps):
+    size = len(boundary)
+    b_plus = [[0, 0] for i in range(len(boundary))]
+    b_minus = [[0, 0] for i in range(len(boundary))]
+    for i in range(size - 1):
+        b_plus[i][0] = boundary[i][0]
+        b_plus[i][1] = boundary[i][1] + eps
+        b_minus[i][0] = boundary[i][0] 
+        b_minus[i][1] = boundary[i][1] - eps
+
+    return b_plus, b_minus
+     
 def make_psi(b_plus, b_minus, vs, end_time, num):
     psi_plus = True
     psi_minus = True
@@ -27,6 +48,7 @@ def make_psi(b_plus, b_minus, vs, end_time, num):
     h_plus = [b_plus[i][1] for i in range(len(b_plus))]
     t_minus = [int(b_minus[i][0]) for i in range(len(b_minus))]
     h_minus = [b_minus[i][1] for i in range(len(b_minus))]
+
 
     for i in range(len(t_plus)):
         temp = True
@@ -46,7 +68,7 @@ def make_psi(b_plus, b_minus, vs, end_time, num):
 def output_trace(phi, psi, vs, num):
     S = z3.Solver()
     S.add(z3.And(phi, psi))
-    print(S.check())
+    S.check()
     m = S.model()
     y = [i for i in range(num)]
     x = [i * 1.0 / 5 for i in y]
