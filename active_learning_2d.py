@@ -5,9 +5,11 @@ import matplotlib.pyplot as plt
 import random as random
 import z3
 
+random.seed(708)
+
 def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
                                                            [0,1.0]],
-          epsilon=0.05, num_points=100, lipschitz_param=0.05):
+          epsilon=0.05, num_points=200, lipschitz_param=0.05):
     """
     Takes a boundary, and returns its proper label, which is True or False.
 
@@ -19,6 +21,9 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
         my_boundary = invert(boundary, param_boundaries)
     else:
         my_boundary = boundary
+        
+    print("in the label function, should_invert is", should_invert)
+    # print("boundary that label is synthesising", my_boundary)
 
     xs = [z3.Real('x%d' % i) for i in range(num_points)]
     us = [z3.Real('u%d' % i) for i in range(num_points)]
@@ -29,11 +34,11 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
         formula = True
         for i in range(num_points - 1):
             formula = z3.And(formula, xs[i+1] == xs[i] + us[i],
-                             xs[i+1] - xs[i] <= lipschitz_param,
-                             xs[i] - xs[i+1] <= lipschitz_param,
+                             # xs[i+1] - xs[i] <= lipschitz_param,
+                             # xs[i] - xs[i+1] <= lipschitz_param,
                              xs[i] >= 0, xs[i+1] >= 0)
         return formula
-        
+
     trace = bt.trace(my_boundary, epsilon, num_points, xs,
                      param_boundaries[0][1], make_phi(xs, us))
 
@@ -310,7 +315,7 @@ def invert(boundary, param_boundaries):
         new_x = param_boundaries[0][0] + param_boundaries[0][1] - point[0]
         new_y = param_boundaries[1][0] + param_boundaries[1][1] - point[1]
         new_boundary.append([new_x, new_y])
-    return new_boundary
+    return new_boundary[::-1]
 
 def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                          param_boundaries):
@@ -334,6 +339,7 @@ def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
     # but instead of negating, you want to take the limits minus the example,
     # so that you remain within the same parameter boundaries
     inv_pos_example = invert(positive_example, param_boundaries)
+    print("in find_endpoint_bounds, inv_pos_example is", inv_pos_example)
     inv_upper_bounds = find_upper_endpoint_bounds(inv_pos_example,
                                                   tolerance_a, tolerance_b,
                                                   param_boundaries, True)
@@ -379,7 +385,7 @@ def find_endpoint_bound(tolerance_a, tolerance_b, vary_end, pos_ends, neg_ends):
     distance = abs(pos_ends[vary_end][vary_index]
                    - neg_ends[vary_end][vary_index])
     num_iters = np.ceil(np.log2(distance / tolerance_b))
-    num_iters = max(0, num_iters)
+    num_iters = int(max(0, num_iters))
     # repeatedly go half-way between the two ends, see if that's positive or
     # negative, update accordingly
     for i in range(num_iters):
@@ -428,6 +434,7 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
     assert isinstance(tolerance_b, float), "fourth argument of maximally_extend_segment should be a float representing how finely we're approximating the convex set"
     assert tolerance_a > 0, "tolerance_a should be positive in maximally_extend_segment"
     assert tolerance_b > 0, "tolerance_b should be positive in maximally_extend_segment"
+    # print("index in maximally_extend_segment is", index)
     if is_positive:
         sign = 1
     else:
@@ -581,5 +588,5 @@ def classify_trace(bounds, trace):
 
     return between
 
-# bounds = find_positive_set(3, 0.1, 0.1, [[0.1, 19.9], [0.1, 0.9]])
-# print(bounds)
+bounds = find_positive_set(3, 0.1, 0.2, [[0.1, 19.9], [0.1, 0.9]])
+print(bounds)
