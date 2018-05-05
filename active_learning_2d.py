@@ -362,9 +362,26 @@ def find_endpoint_bound(tolerance_a, tolerance_b, vary_end, pos_ends, neg_ends,
             neg_ends[vary_end][vary_index] = test_val
     return pos_ends[vary_end]
 
-def distance_point_to_line(point, a, b, c):
-    """Distance from a point to the line ax + by + c = 0"""
-    return abs(a*point[0] + b*point[1] + c) / np.sqrt(a**2 + b**2)
+def angle_line(point0, point1):
+    """Takes two points, returns the angle of the line they define"""
+    assert isinstance(point0, list), "first argument of angle_line should be list"
+    assert len(point0) == 2, "first argument of angle_line should have length 2"
+    assert isinstance(point1, list), "second argument of angle_line should be list"
+    assert len(point1) == 2, "second argument of angle_line should have length 2"
+    assert isinstance(point0[0], float) and isinstance(point0[1], float), "first argument of angle_line should be list of floats"
+    assert isinstance(point1[0], float) and isinstance(point1[1], float), "second argument of angle_line should be list of floats"
+    return np.arctan((point1[1] - point0[1]) / (point1[0] - point0[0]))
+
+def distance_to_hit_line(point0, point1, point2):
+    """
+    Returns the distance that point0 can move perpendicularly to point 1 before
+    hitting the line between point1 and point2.
+    """
+    len_0_1 = np.sqrt((point0[0] - point1[0])**2 + (point0[1] - point1[1])**2)
+    t01 = angle_line(point0, point1)
+    t12 = angle_line(point1, point2)
+    t = abs(t12 - t01)
+    return len_0_1*np.tan(t)
 
 def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
                              is_positive):
@@ -404,40 +421,37 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
     else:
         sign = -1
     distance_min = 0
+    print("index is", index)
     print("first endpoint", endpoints[index])
     print("second endpoint", endpoints[index+1])
     mid = midpoint([endpoints[index], endpoints[index + 1]])
     print("midpoint", mid)
-    if (mid == endpoints[index]) or (mid == endpoints[index + 1]):
+    len_mid_end = np.sqrt((mid[1] - endpoints[index+1][1])**2
+                          + (mid[0] - endpoints[index+1][0])**2)
+    if len_mid_end == 0:
         return mid
     distances = []
     if index > 0:
         # ensure we don't go beyond line connecting two previous endpoints
-        a = endpoints[index][1] - endpoints[index - 1][1]
-        b = endpoints[index - 1][0] - endpoints[index][0]
-        c = (endpoints[index - 1][0] * endpoints[index][1]
-             - endpoints[index][0] * endpoints[index - 1][1])
-        distances.append(distance_point_to_line(mid, a, b, c))
-        print("distance not to exceed:", distance_point_to_line(mid, a, b, c))
+        dist = distance_to_hit_line(mid, endpoints[index], endpoints[index - 1])
+        distances.append(dist)
+        print("distance to line connecting previous two endpoints:", dist)
     if index < len(endpoints) - 2:
         # ensure we don't go beyond line connecting two next endpoints
-        a = endpoints[index + 2][1] - endpoints[index + 1][1]
-        b = endpoints[index + 1][0] - endpoints[index + 2][0]
-        c = (endpoints[index + 1][0] * endpoints[index + 2][1]
-             - endpoints[index + 2][0] * endpoints[index + 1][1])
-        distances.append(distance_point_to_line(mid, a, b, c))
-        print("distance not to exceed:", distance_point_to_line(mid, a, b, c))
+        dist = distance_to_hit_line(mid, endpoints[index+1], endpoints[index+2])
+        distances.append(dist)
+        print("distance to line connecting two next endpoints:", dist)
     # ensure we don't go beyond endpoints in this interval
-    length = np.sqrt((endpoints[index + 1][0] - endpoints[index][0])**2
-                     + (endpoints[index + 1][1] - endpoints[index][1])**2)
-    dist_to_top = ((-0.5)*length*(endpoints[index + 1][1] - endpoints[index][1])
+    dist_to_top = ((-1.0)*len_mid_end*(endpoints[index + 1][1]
+                                       - endpoints[index][1])
                    / (endpoints[index + 1][0] - endpoints[index][0]))
-    print("distance not to exceed:", dist_to_top)
+    print("distance to top endpoint:", dist_to_top)
     distances.append(dist_to_top)
-    dist_to_right = ((-0.5)*length*(endpoints[index+1][0] - endpoints[index][0])
+    dist_to_right = ((-1.0)*len_mid_end*(endpoints[index+1][0]
+                                         - endpoints[index][0])
                      / (endpoints[index + 1][1] - endpoints[index][1]))
     distances.append(dist_to_right)
-    print("distance not to exceed:", dist_to_right)
+    print("distance to right endpoint:", dist_to_right)
     distance_max = sign*min(distances)
     # find number of iterations we need
     print("distance_max", distance_max)
