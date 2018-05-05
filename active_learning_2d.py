@@ -7,6 +7,16 @@ import z3
 
 # random.seed(708)
 
+def plot(data):
+    """
+    Convert a trace or a boundary to two lists, x and y axis. And plot it.
+    """
+
+    x_axis = [data[i][0] for i in range(len(data))]
+    y_axis = [data[i][1] for i in range(len(data))]
+    plt.plot(x_axis, y_axis)
+    plt.show()
+
 def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
                                                            [0,1.0]],
           epsilon=0.01, num_points=100, lipschitz_param=0.05):
@@ -21,7 +31,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
         my_boundary = invert(boundary, param_boundaries)
     else:
         my_boundary = boundary
-        
+    plot(my_boundary)
     print("in the label function")
     
     print("in the label function, should_invert is", should_invert)
@@ -45,7 +55,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
                      param_boundaries[0][1], make_phi(xs, us))
 
     # print("trace that is being labelled is", trace)
-
+    #plot(trace)
     class_val = True
     
     for point in trace:
@@ -493,6 +503,7 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
     else:
         sign = -1
     distance_min = 0
+    # print("first endpoint", endpoint)
     mid = midpoint([endpoints[index], endpoints[index + 1]])
     distances = []
     if index > 0:
@@ -520,9 +531,9 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
     distances.append(dist_to_right)
     distance_max = sign*min(distances)
     # find number of iterations we need
-    # print("distance_max", distance_max)
-    # print("distance_min", distance_min)
-    # print("tolerance_b", tolerance_b)
+    print("distance_max", distance_max)
+    print("distance_min", distance_min)
+    print("tolerance_b", tolerance_b)
     num_iters = np.ceil(np.log2(abs(distance_max - distance_min) / tolerance_b))
     num_iters = int(max(num_iters, 0))
     # do bisection on distance to move middle out
@@ -650,5 +661,7 @@ def classify_trace(bounds, trace):
 
     return between
 
-bounds = find_positive_set(4, 0.2, 0.1, [[0.1, 19.9], [0.1, 0.9]])
+#boundary = [[19.0, 0.9], [19.0, 0.7000000000000001], [19.0, 0.5], [19.0, 0.29999999999999993]]
+#label(boundary)
+bounds = find_positive_set(4, 0.2, 0.1, [[0.0, 20.0], [0.0, 1.0]])
 print(bounds)
