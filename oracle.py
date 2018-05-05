@@ -39,7 +39,7 @@ def plot(data):
 
 def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
                                                            [0,1.0]],
-          epsilon=0.01, num_points=100, lipschitz_param=0.05):
+          epsilon=0.01, num_points=200, lipschitz_param=0.05):
     """
     Takes a boundary, and returns its proper label, which is True or False.
 
@@ -51,11 +51,12 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
         my_boundary = invert(boundary, param_boundaries)
     else:
         my_boundary = boundary
-    plot(my_boundary)
+    # plot(my_boundary)
     # print("in the label function")
     
     # print("in the label function, should_invert is", should_invert)
     # print("boundary that label is synthesising", my_boundary)
+    # print(num_points)
     
     xs = [z3.Real('x%d' % i) for i in range(num_points)]
     us = [z3.Real('u%d' % i) for i in range(num_points)]
