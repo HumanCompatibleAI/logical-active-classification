@@ -30,6 +30,7 @@ def pre_process(boundary, eps): #boundary is a 2-d array: [[x_1, y_1],[x_2,y_2],
     return b_plus, b_minus
 
 def non_perp_process(boundary, eps):
+    # deprecated
     size = len(boundary)
     b_plus = [[0, 0] for i in range(len(boundary))]
     b_minus = [[0, 0] for i in range(len(boundary))]
@@ -44,21 +45,24 @@ def non_perp_process(boundary, eps):
 def make_psi(b_plus, b_minus, vs, end_time, num):
     psi_plus = True
     psi_minus = True
-    t_plus = [int(b_plus[i][0]) for i in range(len(b_plus))]
+    t_plus = [int(point[0] * num / end_time * 1.0) for point in b_plus]
     h_plus = [b_plus[i][1] for i in range(len(b_plus))]
-    t_minus = [int(b_minus[i][0]) for i in range(len(b_minus))]
+    t_minus = [int(b_minus[i][0] * num / end_time * 1.0) for i in range(len(b_minus))]
     h_minus = [b_minus[i][1] for i in range(len(b_minus))]
+    # print(t_plus)
+    # print(h_plus)
 
 
     for i in range(len(t_plus)):
         temp = True
-        for j in range(int(t_plus[i] * 1.0 / end_time * num), num):
+        # print(int(t_plus[i]))
+        for j in range(t_plus[i], num):
             temp = z3.And(temp, vs[j] < h_plus[i])
         psi_plus = z3.And(psi_plus, temp)
 
     for i in range(len(t_minus)):
         temp = True
-        for j in range(int(t_minus[i] * 1.0 / end_time * num), num):
+        for j in range(t_minus[i], num):
             temp = z3.And(temp, vs[j] < h_minus[i])
 
         psi_minus = z3.And(psi_minus, z3.Not(temp))
@@ -82,6 +86,7 @@ def output_trace(phi, psi, vs, num):
     
 
 def trace(boundary, eps, num, vs, end_time, phi):
+    print("Inside trace function of boundary_to_trace")
     b_plus, b_minus = pre_process(boundary, eps)
     psi = make_psi(b_plus, b_minus, vs, end_time, num)
     return output_trace(phi, psi, vs, num)
