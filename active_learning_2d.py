@@ -2,7 +2,8 @@ import boundary_to_trace_v4 as bt
 import trace_to_boundary as tb
 import numpy as np
 import matplotlib.pyplot as plt
-import random as random
+import random
+import copy
 import z3
 
 # random.seed(708)
@@ -32,10 +33,10 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
     else:
         my_boundary = boundary
     plot(my_boundary)
-    print("in the label function")
+    # print("in the label function")
     
-    print("in the label function, should_invert is", should_invert)
-    print("boundary that label is synthesising", my_boundary)
+    # print("in the label function, should_invert is", should_invert)
+    # print("boundary that label is synthesising", my_boundary)
     
     xs = [z3.Real('x%d' % i) for i in range(num_points)]
     us = [z3.Real('u%d' % i) for i in range(num_points)]
@@ -113,7 +114,7 @@ def midpoint(endpoints):
     assert isinstance(endpoints, list) or isinstance(endpoints, tuple), "endpoints of wrong type in function midpoint"
     assert len(endpoints) == 2, "you didn't give exactly two endpoints in the midpoint function"
     points = np.array(endpoints)
-    return 0.5*(points[0] + points[1])
+    return (0.5*(points[0] + points[1])).tolist()
 
 def endpoints_to_boundary(list_endpoints, tolerance):
     """
@@ -162,6 +163,8 @@ def move_middle_out(endpoints, distance):
     my_ends = np.array(endpoints)
     direction = np.array([-1,1]) * ((my_ends[1] - my_ends[0])[::-1])
     return (mpoint + (distance/length)*direction).tolist()
+
+# print(move_middle_out([[0,1],[20,0]], 2.0))
 
 def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                                param_boundaries, should_invert):
@@ -223,8 +226,8 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
         print("next boundary ends tried in find_upper_endpoint_bounds",
               test_ends)
         test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
-        print("next full boundary tried in find_upper_endpoint_bounds",
-              test_top_boundary)
+        # print("next full boundary tried in find_upper_endpoint_bounds",
+        #       test_top_boundary)
         if (not label(test_top_boundary, should_invert, param_boundaries)):
             # if this new result is negative, find the limit for the top left
             # end between the old positive result and the new negative results
@@ -239,6 +242,7 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
             pos_ends = test_ends
             top_right_end = [param_boundaries[0][1], pos_ends[1][1]]
             test_ends = [pos_ends[0], top_right_end]
+            print("next boundary ends tried in find_endpoint_bounds", test_ends)
             test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
             if (not label(test_top_boundary, should_invert, param_boundaries)):
                 # if this makes the boundary negative, find the limit for the
@@ -252,6 +256,8 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                 pos_ends[1] = top_right_limit
                 top_left_end = [top_right_limit[0], pos_ends[0][1]]
                 test_ends = [top_left_end, pos_ends[1]]
+                print("next boundary ends tried in find_endpoint_bounds",
+                      test_ends)
                 test_top_boundary = endpoints_to_boundary(test_ends,
                                                           tolerance_a)
                 if (not label(test_top_boundary, should_invert,
@@ -274,6 +280,8 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                 pos_ends = test_ends
                 top_right_end[1] = param_boundaries[1][1]
                 test_ends = [pos_ends[0], top_right_end]
+                print("next boundary ends tried in find_endpoint_bounds",
+                      test_ends)
                 test_top_boundary = endpoints_to_boundary(test_ends,
                                                           tolerance_a)
                 if (not label(test_top_boundary, should_invert,
@@ -290,6 +298,8 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                     # the right makes it negative
                     top_left_end = [param_boundaries[0][1], pos_ends[0][1]]
                     test_ends = [top_left_end, top_right_limit]
+                    print("next boundary ends tried in find_endpoint_bounds",
+                          test_ends)                    
                     test_top_boundary = endpoints_to_boundary(test_ends,
                                                               tolerance_a)
                     if (not label(test_top_boundary, should_invert,
@@ -317,9 +327,11 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
 
     # next, find the top right end if you haven't already
     if (not have_found_top_right_end):
+        print("finding top right end")
         # to do this, first try moving the right end as far right as possible
         top_right_end = [param_boundaries[0][1], pos_ends[1][1]]
         test_ends = [pos_ends[0], top_right_end]
+        print("next boundary ends tried in find_endpoint_bounds", test_ends)
         test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
         if (not label(test_top_boundary, should_invert, param_boundaries)):
             # if that makes the boundary a negative example, then find the top
@@ -334,6 +346,7 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
             pos_ends = test_ends
             top_right_end = [pos_ends[1][0], pos_ends[0][1]]
             test_ends = [pos_ends[0], top_right_end]
+            print("next boundary ends tried in find_endpoint_bounds", test_ends)
             test_top_boundary = endpoints_to_boundary(test_ends, tolerance_a)
             if (not label(test_top_boundary, should_invert, param_boundaries)):
                 # if that made the boundary a negative example, then find the
@@ -449,14 +462,21 @@ def find_endpoint_bound(tolerance_a, tolerance_b, vary_end, pos_ends, neg_ends,
     distance = abs(pos_ends[vary_end][vary_index]
                    - neg_ends[vary_end][vary_index])
     num_iters = np.ceil(np.log2(distance / tolerance_b))
+    print("num_iters before max-ing with 0", num_iters)
     num_iters = int(max(0, num_iters))
     # repeatedly go half-way between the two ends, see if that's positive or
     # negative, update accordingly
     for i in range(num_iters):
-        test_ends = pos_ends
+        print("start of loop in find_endpoint_bound")
+        print("pos_ends in loop:", pos_ends)
+        print("neg_ends in loop:", neg_ends)
+        test_ends = copy.deepcopy(pos_ends)
         test_val = 0.5*(pos_ends[vary_end][vary_index]
                         + neg_ends[vary_end][vary_index])
         test_ends[vary_end][vary_index] = test_val
+        # print("pos_ends after we change test_ends:", pos_ends)
+        print("boundary ends we're testing in loop",
+              test_ends)
         test_boundary = endpoints_to_boundary(test_ends, tolerance_a)
         if label(test_boundary, should_invert, param_boundaries):
             pos_ends[vary_end][vary_index] = test_val
@@ -498,13 +518,20 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
     assert isinstance(tolerance_b, float), "fourth argument of maximally_extend_segment should be a float representing how finely we're approximating the convex set"
     assert tolerance_a > 0, "tolerance_a should be positive in maximally_extend_segment"
     assert tolerance_b > 0, "tolerance_b should be positive in maximally_extend_segment"
+
+    print("inside maximally_extend_segment")
+    
     if is_positive:
         sign = 1
     else:
         sign = -1
     distance_min = 0
-    # print("first endpoint", endpoint)
+    print("first endpoint", endpoints[index])
+    print("second endpoint", endpoints[index+1])
     mid = midpoint([endpoints[index], endpoints[index + 1]])
+    print("midpoint", mid)
+    if (mid == endpoints[index]) or (mid == endpoints[index + 1]):
+        return mid
     distances = []
     if index > 0:
         # ensure we don't go beyond line connecting two previous endpoints
@@ -513,6 +540,7 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
         c = (endpoints[index - 1][0] * endpoints[index][1]
              - endpoints[index][0] * endpoints[index - 1][1])
         distances.append(distance_point_to_line(mid, a, b, c))
+        print("distance not to exceed:", distance_point_to_line(mid, a, b, c))
     if index < len(endpoints) - 2:
         # ensure we don't go beyond line connecting two next endpoints
         a = endpoints[index + 2][1] - endpoints[index + 1][1]
@@ -520,21 +548,25 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
         c = (endpoints[index + 1][0] * endpoints[index + 2][1]
              - endpoints[index + 2][0] * endpoints[index + 1][1])
         distances.append(distance_point_to_line(mid, a, b, c))
+        print("distance not to exceed:", distance_point_to_line(mid, a, b, c))
     # ensure we don't go beyond endpoints in this interval
     length = np.sqrt((endpoints[index + 1][0] - endpoints[index][0])**2
                      + (endpoints[index + 1][1] - endpoints[index][1])**2)
     dist_to_top = ((-0.5)*length*(endpoints[index + 1][1] - endpoints[index][1])
                    / (endpoints[index + 1][0] - endpoints[index][0]))
+    print("distance not to exceed:", dist_to_top)
     distances.append(dist_to_top)
     dist_to_right = ((-0.5)*length*(endpoints[index+1][0] - endpoints[index][0])
                      / (endpoints[index + 1][1] - endpoints[index][1]))
     distances.append(dist_to_right)
+    print("distance not to exceed:", dist_to_right)
     distance_max = sign*min(distances)
     # find number of iterations we need
     print("distance_max", distance_max)
     print("distance_min", distance_min)
     print("tolerance_b", tolerance_b)
     num_iters = np.ceil(np.log2(abs(distance_max - distance_min) / tolerance_b))
+    print("num_iters before maxing with 0", num_iters)
     num_iters = int(max(num_iters, 0))
     # do bisection on distance to move middle out
     for i in range(num_iters):
@@ -551,6 +583,7 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
     distance_min = float(distance_min)
     bump = move_middle_out([endpoints[index], endpoints[index + 1]],
                            distance_min)
+    print("bumped point is", bump)
     return bump
 
 def interleave(small_list, big_list):

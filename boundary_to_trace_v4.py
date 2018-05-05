@@ -90,7 +90,7 @@ def output_trace(phi, psi, vs, num):
     
 
 def trace(boundary, eps, num, vs, end_time, phi):
-    print("Inside trace function of boundary_to_trace")
+    # print("Inside trace function of boundary_to_trace")
     b_plus, b_minus = pre_process(boundary, eps)
     psi = make_psi(b_plus, b_minus, vs, end_time, num)
     return output_trace(phi, psi, vs, num)
