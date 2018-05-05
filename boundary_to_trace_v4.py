@@ -12,12 +12,12 @@ def phi(x, params):
     t_plus.slice(tau, None)
     return all(map(lambda y:y[1] <= h, x))
 
-def pre_process(boundary, eps): #boundary is a 2-d array: [[x_1, y_1],[x_2,y_2], ...]. Normally, x is tau and y is h. 
+def pre_process(boundary, eps, num, end_time): #boundary is a 2-d array: [[x_1, y_1],[x_2,y_2], ...]. Normally, x is tau and y is h. 
     size = len(boundary)
     if (size != 0 and boundary[0][0] == 0 and boundary[size-1][0] == 0):
         for i in range(size):
-            boundary[i][0] = boundary[i][0] + 0.2
-        print(boundary)
+            boundary[i][0] = boundary[i][0] + (end_time / num * 1.0)
+        #print(boundary)
     b_plus = [[0, 0] for i in range(len(boundary)-1)]
     b_minus = [[0, 0] for i in range(len(boundary)-1)]
     for i in range(size - 1):
@@ -73,13 +73,13 @@ def make_psi(b_plus, b_minus, vs, end_time, num):
     psi = z3.And(psi_plus, psi_minus)
     return psi
 
-def output_trace(phi, psi, vs, num):
+def output_trace(phi, psi, vs, num, end_time):
     S = z3.Solver()
     S.add(z3.And(phi, psi))
     S.check()
     m = S.model()
     y = [i for i in range(num)]
-    x = [i / (5) for i in y]
+    x = [i / (num / end_time * 1.0) for i in y]
     for i in range(num):
         y[i] = m[vs[i]].numerator_as_long() * 1.0 / m[vs[i]].denominator_as_long()
     trace = [[x[i], y[i]] for i in range(len(x))]
@@ -91,8 +91,8 @@ def output_trace(phi, psi, vs, num):
 
 def trace(boundary, eps, num, vs, end_time, phi):
     # print("Inside trace function of boundary_to_trace")
-    b_plus, b_minus = pre_process(boundary, eps)
+    b_plus, b_minus = pre_process(boundary, eps, num, end_time)
     psi = make_psi(b_plus, b_minus, vs, end_time, num)
-    return output_trace(phi, psi, vs, num)
+    return output_trace(phi, psi, vs, num, end_time)
 
 
