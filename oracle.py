@@ -6,6 +6,27 @@ import z3
 
 # random.seed(708)
 
+def invert(boundary, param_boundaries):
+    """
+    Takes a boundary, and rotates it by 180 degrees in parameter space
+
+    Arguments:
+    boundary -- a boundary
+    param_boundaries -- list of lists giving upper and lower bounds for possible
+                        parameter values. Specifically, should be of the form
+                        [[lower_bound_x, upper_bound_x], 
+                         [lower_bound_y, upper_bound_y]]
+
+    Note that a 180 degree rotation is the same as flipping vertically and then
+    horizontally, which is what we will actually do
+    """
+    new_boundary = []
+    for point in boundary:
+        new_x = param_boundaries[0][0] + param_boundaries[0][1] - point[0]
+        new_y = param_boundaries[1][0] + param_boundaries[1][1] - point[1]
+        new_boundary.append([new_x, new_y])
+    return new_boundary[::-1]
+
 def plot(data):
     """
     Convert a trace or a boundary to two lists, x and y axis. And plot it.

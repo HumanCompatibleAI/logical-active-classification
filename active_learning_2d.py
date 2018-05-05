@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import random
 import copy
 import z3
-from oracle import label, get_positive_example
+from oracle import label, get_positive_example, invert
 
 def midpoint(endpoints):
     """Return the midpoint of a list of two endpoints"""
@@ -259,27 +259,6 @@ def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                 top_right_limit = top_right_end
     return (top_left_limit, top_right_limit)
 
-def invert(boundary, param_boundaries):
-    """
-    Takes a boundary, and rotates it by 180 degrees in parameter space
-
-    Arguments:
-    boundary -- a boundary
-    param_boundaries -- list of lists giving upper and lower bounds for possible
-                        parameter values. Specifically, should be of the form
-                        [[lower_bound_x, upper_bound_x], 
-                         [lower_bound_y, upper_bound_y]]
-
-    Note that a 180 degree rotation is the same as flipping vertically and then
-    horizontally, which is what we will actually do
-    """
-    new_boundary = []
-    for point in boundary:
-        new_x = param_boundaries[0][0] + param_boundaries[0][1] - point[0]
-        new_y = param_boundaries[1][0] + param_boundaries[1][1] - point[1]
-        new_boundary.append([new_x, new_y])
-    return new_boundary[::-1]
-
 def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                          param_boundaries):
     """
@@ -304,7 +283,8 @@ def find_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
     # but instead of negating, you want to take the limits minus the example,
     # so that you remain within the same parameter boundaries
     inv_pos_example = invert(positive_example, param_boundaries)
-    # print("in find_endpoint_bounds, the positive example is", positive_example)
+    # print("in find_endpoint_bounds, the positive example is",
+    #        positive_example)
     # print("in find_endpoint_bounds, inv_pos_example is", inv_pos_example)
     inv_upper_bounds = find_upper_endpoint_bounds(inv_pos_example,
                                                   tolerance_a, tolerance_b,
