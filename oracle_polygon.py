@@ -45,10 +45,11 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
     print("trace that is being labelled is", trace)
     utils.plot(trace)
 
-    # in this labelling function, we demand that the trace's velocity be below the lines connecting the
-    # points (0,1), (8, 0.9), (14, 0.6), (20, 0.2), and that it always have a bit above (0,0.5),
-    # (5, 0.3), (12, 0.2), (20, 0.1). i.e. those points should be the polygon that the boundary has to
-    # be inside
+    # in this labelling function, we demand that the trace's velocity be below
+    # the lines connecting the points (0,1), (8, 0.9), (14, 0.6), (20, 0.2),
+    # and that it always have a bit above (0,0.5), (5, 0.3), (12, 0.2),
+    # (20, 0.1). i.e. those points should be the polygon that the boundary has
+    # to be inside
     
     below_top = True
     
@@ -72,15 +73,19 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
             # print(trace[index][0])
             if trace[index][0] <= 5:
                 for i in range(index, len(trace)):
-                    above_local_bottom = above_local_bottom or (trace[i][1] >= trace[i][0]/(-25.0) + 0.5)
+                    above_local_bottom = (above_local_bottom or
+                                          (trace[i][1] >= trace[i][0]/(-25.0)
+                                           + 0.5))
             if trace[index][0] > 5 and trace[index][0] <= 12:
                 for i in range(index, len(trace)):
-                    above_local_bottom = above_local_bottom or (trace[i][1] >= trace[i][0]/(-70.0)
-                                                                + 13.0/35)
+                    above_local_bottom = (above_local_bottom or
+                                          (trace[i][1] >= trace[i][0]/(-70.0)
+                                           + 13.0/35))
             if trace[index][0] >= 12:
                 for i in range(index, len(trace)):
-                    above_local_bottom = above_local_bottom or (trace[i][1] >= trace[i][0]/(-80.0)
-                                                                + 7.0/20)
+                    above_local_bottom = (above_local_bottom or
+                                          (trace[i][1] >= trace[i][0]/(-80.0)
+                                           + 7.0/20))
             # print("above local bottom?", above_local_bottom)
             above_bottom = above_bottom and above_local_bottom
 

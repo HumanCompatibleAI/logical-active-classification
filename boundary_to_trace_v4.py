@@ -32,7 +32,6 @@ def pre_process(boundary, eps, num, end_time): #boundary is a 2-d array: [[x_1, 
         # b_plus[i][1] = boundary[i][1] - dx
         # b_minus[i][0] = boundary[i][0] - dy
         # b_minus[i][1] = boundary[i][1] + dx
-
     return b_plus, b_minus
 
 # print(pre_process([[0,1], [1,0]], 0.70710678, 1000, 1000))
@@ -62,6 +61,7 @@ def make_psi(b_plus, b_minus, vs, end_time, num):
     print("t_plus", t_plus)
     # print(h_plus)
     print("t_minus", t_minus)
+
 
 
     for i in range(len(t_plus)):
