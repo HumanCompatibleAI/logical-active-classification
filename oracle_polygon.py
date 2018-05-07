@@ -38,7 +38,7 @@ def plot(data):
     plt.show()
 
 def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
-                                                           [0,1.0]],
+                                                           [0, 1.0]],
           epsilon=0.01, num_points=200, lipschitz_param=0.05):
     """
     Takes a boundary, and returns its proper label, which is True or False.
@@ -52,7 +52,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
     else:
         my_boundary = boundary
     # plot(my_boundary)
-    # print("in the label function")
+    print("in the label function")
     
     # print("in the label function, should_invert is", should_invert)
     # print("boundary that label is synthesising", my_boundary)
@@ -75,13 +75,27 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
     trace = bt.trace(my_boundary, epsilon, num_points, xs,
                      param_boundaries[0][1], make_phi(xs, us))
 
-    # print("trace that is being labelled is", trace)
-    #plot(trace)
+    print("trace that is being labelled is", trace)
+    plot(trace)
+
+    # in this labelling function, we demand that the trace's velocity be inside a polygon with points
+    # (0,1), (8, 0.9), (14, 0.6), (20, 0.2), (0,0.5), (5, 0.3), (12, 0.2), (20, 0.1).
+    
     class_val = True
     
     for point in trace:
-        if point[0] >= 10:
-            class_val = class_val and (point[1] <= (-0.08)*point[0] + 1.8)
+        if point[0] <= 8:
+            class_val = class_val and (point[1] <= point[0]/(-80.0) + 1.0)
+        if point[0] <= 14 and point[0] >= 8:
+            class_val = class_val and (point[1] <= point[0]/(-20.0) + 13.0/10)
+        if point[0] >= 14:
+            class_val = class_val and (point[1] <= point[0]/(-15.0) + 23.0/15)
+        if point[0] <= 5:
+            class_val = class_val and (point[1] >= point[0]/(-25.0) + 0.5)
+        if point[0] >=5 and point[0] <= 12:
+            class_val = class_val and (point[1] >= point[0]/(-70.0) + 13.0/35)
+        if point[0] >= 12:
+            class_val = class_val and (point[1] >= point[0]/(-80.0) + 7.0/20)
 
     return class_val
 
@@ -96,11 +110,12 @@ def get_positive_example(param_boundaries):
     for i in range(201):
         x_val = ((param_boundaries[0][1] - param_boundaries[0][0])*(i/200.0)
                  + param_boundaries[0][0])
-        m = (-0.8)/19.8
-        b = 0.9 - 0.1*m
+        m = -0.03
+        b = 0.75
         y_val = m*x_val + b
         pos_trace.append([x_val, y_val])
-    
+
+    plot(pos_trace)
     boundary = tb.boundary(pos_trace)
     nice_boundary = [point for point in boundary
                      if (point[0] >= param_boundaries[0][0]
@@ -108,14 +123,28 @@ def get_positive_example(param_boundaries):
                          and point[1] >= param_boundaries[1][0]
                          and point[1] <= param_boundaries[1][1])]
 
-    # true_label = True
-    # for point in pos_trace:
-    #     if point[0] >= 10:
-    #         true_label = true_label and (point[1] <= (-0.08)*point[0] + 1.8)
+    plot(nice_boundary)
+    print(nice_boundary)
+
+    true_label = True
+    
+    for point in pos_trace:
+        if point[0] <= 8:
+            true_label = true_label and (point[1] <= point[0]/(-80.0) + 1.0)
+        if point[0] <= 14 and point[0] >= 8:
+            true_label = true_label and (point[1] <= point[0]/(-20.0) + 13.0/10)
+        if point[0] >= 14:
+            true_label = true_label and (point[1] <= point[0]/(-15.0) + 23.0/15)
+        if point[0] <= 5:
+            true_label = true_label and (point[1] >= point[0]/(-25.0) + 0.5)
+        if point[0] >=5 and point[0] <= 12:
+            true_label = true_label and (point[1] >= point[0]/(-70.0) + 13.0/35)
+        if point[0] >= 12:
+            true_label = true_label and (point[1] >= point[0]/(-80.0) + 7.0/20)
 
     # print("positive trace we generate is", pos_trace)
             
-    # print("true classification of your trace is", true_label)
+    print("true classification of your trace is", true_label)
 
     # print("boundary we generate is", nice_boundary)
     
