@@ -50,11 +50,14 @@ def make_psi(b_plus, b_minus, vs, end_time, num):
     psi_plus = True
     psi_minus = True
     t_plus = [int(point[0] * num / end_time * 1.0) for point in b_plus]
+    # t_plus = [(point[0] * num / end_time * 1.0) for point in b_plus]
     h_plus = [b_plus[i][1] for i in range(len(b_plus))]
     t_minus = [int(b_minus[i][0] * num / end_time * 1.0) for i in range(len(b_minus))]
+    # t_minus = [(b_minus[i][0] * num / end_time * 1.0) for i in range(len(b_minus))]
     h_minus = [b_minus[i][1] for i in range(len(b_minus))]
-    # print(t_plus)
+    # print("t_plus", t_plus)
     # print(h_plus)
+    # print("t_minus", t_minus)
 
 
     for i in range(len(t_plus)):
@@ -62,13 +65,18 @@ def make_psi(b_plus, b_minus, vs, end_time, num):
         # print(int(t_plus[i]))
         for j in range(t_plus[i], num):
             temp = z3.And(temp, vs[j] < h_plus[i])
+        # for j in range(num):
+        #     if j > t_plus[i]:
+        #         temp = z3.And(temp, vs[j] < h_plus[i])
         psi_plus = z3.And(psi_plus, temp)
 
     for i in range(len(t_minus)):
         temp = True
         for j in range(t_minus[i], num):
             temp = z3.And(temp, vs[j] < h_minus[i])
-
+        # for j in range(num):
+        #     if j > t_minus[i]:
+        #         temp = z3.And(temp, vs[j] < h_minus[i])
         psi_minus = z3.And(psi_minus, z3.Not(temp))
     psi = z3.And(psi_plus, psi_minus)
     return psi

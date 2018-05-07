@@ -51,8 +51,8 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
         my_boundary = invert(boundary, param_boundaries)
     else:
         my_boundary = boundary
-    # plot(my_boundary)
-    # print("in the label function")
+    plot(my_boundary)
+    print("in the label function")
     
     # print("in the label function, should_invert is", should_invert)
     # print("boundary that label is synthesising", my_boundary)

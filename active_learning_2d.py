@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 import random
 import copy
 import z3
-from oracle_polygon import label, get_positive_example, invert, plot
+# from oracle_polygon import label, get_positive_example, invert, plot
+from oracle import label, get_positive_example, invert, plot
 
 def midpoint(endpoints):
     """Return the midpoint of a list of two endpoints"""
