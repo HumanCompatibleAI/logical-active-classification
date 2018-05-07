@@ -1,41 +1,7 @@
 import boundary_to_trace_v4 as bt
 import trace_to_boundary as tb
-import matplotlib.pyplot as plt
-import random
 import z3
-
-# random.seed(708)
-
-def invert(boundary, param_boundaries):
-    """
-    Takes a boundary, and rotates it by 180 degrees in parameter space
-
-    Arguments:
-    boundary -- a boundary
-    param_boundaries -- list of lists giving upper and lower bounds for possible
-                        parameter values. Specifically, should be of the form
-                        [[lower_bound_x, upper_bound_x], 
-                         [lower_bound_y, upper_bound_y]]
-
-    Note that a 180 degree rotation is the same as flipping vertically and then
-    horizontally, which is what we will actually do
-    """
-    new_boundary = []
-    for point in boundary:
-        new_x = param_boundaries[0][0] + param_boundaries[0][1] - point[0]
-        new_y = param_boundaries[1][0] + param_boundaries[1][1] - point[1]
-        new_boundary.append([new_x, new_y])
-    return new_boundary[::-1]
-
-def plot(data):
-    """
-    Convert a trace or a boundary to two lists, x and y axis. And plot it.
-    """
-
-    x_axis = [data[i][0] for i in range(len(data))]
-    y_axis = [data[i][1] for i in range(len(data))]
-    plt.plot(x_axis, y_axis)
-    plt.show()
+import utils
 
 def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
                                                            [0,1.0]],
@@ -48,10 +14,10 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
     """
     # TODO: add type assertions
     if should_invert:
-        my_boundary = invert(boundary, param_boundaries)
+        my_boundary = utils.invert(boundary, param_boundaries)
     else:
         my_boundary = boundary
-    plot(my_boundary)
+    utils.plot(my_boundary)
     print("in the label function")
     
     # print("in the label function, should_invert is", should_invert)
@@ -76,7 +42,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
                      param_boundaries[0][1], make_phi(xs, us))
 
     # print("trace that is being labelled is", trace)
-    #plot(trace)
+    # utils.plot(trace)
     class_val = True
     
     for point in trace:
@@ -86,7 +52,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
     return class_val
 
 def get_positive_example(param_boundaries):
-    """Randomly samples a boundary that should be classified positively.
+    """Samples a boundary that should be classified positively.
 
     This will be specific to one particular hypothesis.
     """
