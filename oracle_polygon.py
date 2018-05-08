@@ -18,7 +18,8 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
         my_boundary = utils.invert(boundary, param_boundaries)
     else:
         my_boundary = boundary
-    utils.plot(my_boundary)
+    print("endpoints of labelled boundary:", [my_boundary[0], my_boundary[-1]])
+    utils.plot(my_boundary, 'tab:orange', param_boundaries)
     print("in the label function")
     
     # print("in the label function, should_invert is", should_invert)
@@ -43,7 +44,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
                      param_boundaries[0][1], make_phi(xs, us))
 
     # print("trace that is being labelled is", trace)
-    utils.plot(trace)
+    utils.plot(trace, 'b-', param_boundaries)
 
     # in this labelling function, we demand that the trace's velocity be below
     # the lines connecting the points (0,1), (8, 0.9), (14, 0.6), (20, 0.2),
@@ -91,6 +92,10 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
 
         return below_top and above_bottom
 
+# test_ends = [[0.049999999999997158, 0.12150166368227366], [20.0, 0.12150166368227366]]
+# test_boundary = utils.endpoints_to_boundary(test_ends, 1.0)
+# print(label(test_boundary))
+    
 def get_positive_example(param_boundaries):
     """Samples a boundary that should be classified positively.
 
@@ -107,7 +112,7 @@ def get_positive_example(param_boundaries):
         y_val = m*x_val + b
         pos_trace.append([x_val, y_val])
 
-    utils.plot(pos_trace)
+    utils.plot(pos_trace, 'b-', param_boundaries)
     boundary = tb.boundary(pos_trace)
     nice_boundary = [point for point in boundary
                      if (point[0] >= param_boundaries[0][0]
@@ -115,7 +120,7 @@ def get_positive_example(param_boundaries):
                          and point[1] >= param_boundaries[1][0]
                          and point[1] <= param_boundaries[1][1])]
 
-    utils.plot(nice_boundary)
+    utils.plot(nice_boundary, 'tab:orange', param_boundaries)
     print("boundary of positive example is", nice_boundary)
 
     below_top = True

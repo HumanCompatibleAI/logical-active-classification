@@ -117,12 +117,20 @@ def invert(boundary, param_boundaries):
         new_boundary.append([new_x, new_y])
     return new_boundary[::-1]
 
-def plot(data):
+def plot(data, plotstyle, param_boundaries):
     """
     Convert a trace or a boundary to two lists, x and y axis. And plot it.
-    """
 
+    plotstyle should be 'b-' for traces and 'tab:orange' for boundaries
+    """
+    x_len = param_boundaries[0][1] - param_boundaries[0][0]
+    x_margin = 0.1*x_len
+    y_len = param_boundaries[1][1] - param_boundaries[1][0]
+    y_margin = 0.1*y_len
+    axes = [param_boundaries[0][0] - x_margin, param_boundaries[0][1] + x_margin,
+            param_boundaries[1][0] - y_margin, param_boundaries[1][1] + y_margin]
     x_axis = [data[i][0] for i in range(len(data))]
     y_axis = [data[i][1] for i in range(len(data))]
-    plt.plot(x_axis, y_axis)
+    plt.plot(x_axis, y_axis, plotstyle)
+    plt.axis(axes)
     plt.show()

@@ -17,7 +17,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
         my_boundary = utils.invert(boundary, param_boundaries)
     else:
         my_boundary = boundary
-    utils.plot(my_boundary)
+    utils.plot(my_boundary, 'tab:orange', param_boundaries)
     print("in the label function")
     
     # print("in the label function, should_invert is", should_invert)

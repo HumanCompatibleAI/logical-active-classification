@@ -472,8 +472,8 @@ def find_positive_set(iterations, tolerance_a, tolerance_b, param_boundaries):
         assert len(upper_extensions) == len(upper_bound) - 1, "upper_extensions should have length 1 less than upper_bound after the inner loop of find_positive_set"
         upper_bound = utils.interleave(upper_extensions, upper_bound)
         lower_bound = utils.interleave(lower_extensions, lower_bound)
-    utils.plot(upper_bound)
-    utils.plot(lower_bound)
+    utils.plot(upper_bound, 'tab:orange', param_boundaries)
+    utils.plot(lower_bound, 'tab:orange', param_boundaries)
     return (upper_bound, lower_bound)
 
 #b = ([[0, 100], [1, 75], [2, 50], [3, 25]], [[0, 75], [1, 50], [2, 25], [3, 0], [4, 0]])
@@ -511,5 +511,5 @@ def classify_trace(bounds, trace):
 
 #boundary = [[19.0, 0.9], [19.0, 0.7000000000000001], [19.0, 0.5], [19.0, 0.29999999999999993]]
 #label(boundary)
-bounds = find_positive_set(4, 0.05, 0.03, [[0.0, 20.0], [0.0, 1.0]])
+bounds = find_positive_set(4, 0.05, 0.05, [[0.0, 20.0], [0.0, 1.0]])
 print(bounds)
