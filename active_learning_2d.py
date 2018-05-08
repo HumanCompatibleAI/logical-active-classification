@@ -4,6 +4,7 @@ import numpy as np
 import copy
 import z3
 import utils
+import math
 # from oracle_polygon import label, get_positive_example
 from oracle import label, get_positive_example
 
@@ -367,14 +368,20 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
         distances.append(dist)
         print("distance to line connecting two next endpoints:", dist)
     # ensure we don't go beyond endpoints in this interval
-    dist_to_top = ((-1.0)*len_mid_end*(endpoints[index + 1][1]
-                                       - endpoints[index][1])
-                   / (endpoints[index + 1][0] - endpoints[index][0]))
+    if endpoints[index+1][0] == endpoints[index][0]:
+        dist_to_top = math.inf
+    else:
+        dist_to_top = ((-1.0)*len_mid_end*(endpoints[index + 1][1]
+                                           - endpoints[index][1])
+                       / (endpoints[index + 1][0] - endpoints[index][0]))
     print("distance to top endpoint:", dist_to_top)
     distances.append(dist_to_top)
-    dist_to_right = ((-1.0)*len_mid_end*(endpoints[index+1][0]
-                                         - endpoints[index][0])
-                     / (endpoints[index + 1][1] - endpoints[index][1]))
+    if endpoints[index+1][1] == endpoints[index][1]:
+        dist_to_right = math.inf
+    else:
+        dist_to_right = ((-1.0)*len_mid_end*(endpoints[index+1][0]
+                                             - endpoints[index][0])
+                         / (endpoints[index + 1][1] - endpoints[index][1]))
     distances.append(dist_to_right)
     print("distance to right endpoint:", dist_to_right)
     distance_max = sign*min(distances)
