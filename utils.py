@@ -24,6 +24,8 @@ def endpoints_to_boundary(list_endpoints, tolerance):
         start = list_endpoints[i]
         end = list_endpoints[i+1]
         total_dist = np.sqrt((end[0] - start[0])**2 + (end[1] - start[1])**2)
+        if total_dist == 0:
+            boundary.append(start)
         n = int(np.ceil(total_dist / tolerance))
         for j in range(n):
             frac = j * tolerance / total_dist
@@ -31,6 +33,8 @@ def endpoints_to_boundary(list_endpoints, tolerance):
                         (1 - frac)*start[1] + frac*end[1]]
             boundary.append(waypoint)
     return boundary
+
+# print(endpoints_to_boundary([[0.0, 0.0], [0.0, 0.0]], 0.1))
 
 def move_middle_out(endpoints, distance):
     """

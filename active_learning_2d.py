@@ -5,8 +5,8 @@ import copy
 import z3
 import utils
 import math
-# from oracle_polygon import label, get_positive_example
-from oracle import label, get_positive_example
+from oracle_polygon import label, get_positive_example
+# from oracle import label, get_positive_example
 
 def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
                                param_boundaries, should_invert):
@@ -290,7 +290,7 @@ def find_endpoint_bound(tolerance_a, tolerance_b, vary_end, pos_ends, neg_ends,
     # repeatedly go half-way between the two ends, see if that's positive or
     # negative, update accordingly
     for i in range(num_iters):
-        print("start of loop in find_endpoint_bound")
+        print("have just looped in find_endpoint_bound")
         print("pos_ends in loop:", pos_ends)
         print("neg_ends in loop:", neg_ends)
         test_ends = copy.deepcopy(pos_ends)

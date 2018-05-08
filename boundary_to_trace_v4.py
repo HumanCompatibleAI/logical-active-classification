@@ -12,12 +12,15 @@ def phi(x, params):
     t_plus.slice(tau, None)
     return all(map(lambda y:y[1] <= h, x))
 
-def pre_process(boundary, eps, num, end_time): #boundary is a 2-d array: [[x_1, y_1],[x_2,y_2], ...]. Normally, x is tau and y is h. 
+def pre_process(boundary, eps, num, end_time): #boundary is a 2-d array: [[x_1, y_1],[x_2,y_2], ...]. Normally, x is tau and y is h.
+    # print("Inside the pre_process function")
+    # print("boundary is", boundary)
     size = len(boundary)
     if (size != 0 and boundary[0][0] == 0 and boundary[size-1][0] == 0):
         for i in range(size):
             boundary[i][0] = boundary[i][0] + (end_time / num * 1.0)
         #print(boundary)
+    # print("now boundary is", boundary)
     b_plus = [[0, 0] for i in range(len(boundary))]
     b_minus = [[0, 0] for i in range(len(boundary))]
     for i in range(size - 1):
@@ -30,6 +33,9 @@ def pre_process(boundary, eps, num, end_time): #boundary is a 2-d array: [[x_1, 
         b_plus[i][1] = boundary[i][1] - dx
         b_minus[i][0] = boundary[i][0] - dy 
         b_minus[i][1] = boundary[i][1] + dx
+    # print("length of b_plus", len(b_plus))
+    # print("size variable", size)
+    # print("b_plus[size-1]", b_plus[size-1])
     b_plus[size-1][0] = boundary[size-1][0]
     if boundary[size-1][1] + eps > 1:
         b_plus[size-1][1] = boundary[size-1][1]
@@ -106,7 +112,8 @@ def output_trace(phi, psi, vs, num, end_time):
     
 
 def trace(boundary, eps, num, vs, end_time, phi):
-    # print("Inside trace function of boundary_to_trace")
+    print("Inside trace function of boundary_to_trace")
+    # print("Boundary is", boundary)
     b_plus, b_minus = pre_process(boundary, eps, num, end_time)
     psi = make_psi(b_plus, b_minus, vs, end_time, num)
     return output_trace(phi, psi, vs, num, end_time)

@@ -18,7 +18,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
         my_boundary = utils.invert(boundary, param_boundaries)
     else:
         my_boundary = boundary
-    # utils.plot(my_boundary)
+    utils.plot(my_boundary)
     print("in the label function")
     
     # print("in the label function, should_invert is", should_invert)
@@ -42,7 +42,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
     trace = bt.trace(my_boundary, epsilon, num_points, xs,
                      param_boundaries[0][1], make_phi(xs, us))
 
-    print("trace that is being labelled is", trace)
+    # print("trace that is being labelled is", trace)
     utils.plot(trace)
 
     # in this labelling function, we demand that the trace's velocity be below
@@ -61,7 +61,7 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
         if point[0] >= 14:
             below_top = below_top and (point[1] <= point[0]/(-15.0) + 23.0/15)
 
-    print("below top?", below_top)
+    # print("below top?", below_top)
             
     if not below_top:
         return False
@@ -128,7 +128,7 @@ def get_positive_example(param_boundaries):
         if point[0] >= 14:
             below_top = below_top and (point[1] <= point[0]/(-15.0) + 23.0/15)
 
-    print("below top?", below_top)
+    # print("below top?", below_top)
             
     above_bottom = True
     
@@ -137,22 +137,25 @@ def get_positive_example(param_boundaries):
         above_local_bottom = False
         if pos_trace[index][0] <= 5:
             for i in range(index, len(pos_trace)):
-                above_local_bottom = above_local_bottom or (pos_trace[i][1] >= pos_trace[i][0]/(-25.0)
-                                                            + 0.5)
+                above_local_bottom = (above_local_bottom or
+                                      (pos_trace[i][1] >= pos_trace[i][0]
+                                       / (-25.0) + 0.5))
         if pos_trace[index][0] > 5 and pos_trace[index][0] <= 12:
             # print("does charity start at home?", (pos_trace[index][1] >= pos_trace[index][0]/(70.0)
             #                                       + 13.0/35))
             for i in range(index, len(pos_trace)):
-                above_local_bottom = above_local_bottom or (pos_trace[i][1] >= pos_trace[i][0]/(-70.0)
-                                                            + 13.0/35)
+                above_local_bottom = (above_local_bottom or
+                                      (pos_trace[i][1] >= pos_trace[i][0]
+                                       / (-70.0) + 13.0/35))
         if pos_trace[index][0] >= 12:
             for i in range(index, len(pos_trace)):
-                above_local_bottom = above_local_bottom or (pos_trace[i][1] >= pos_trace[i][0]/(-80.0)
-                                                            + 7.0/20)
+                above_local_bottom = (above_local_bottom or
+                                      (pos_trace[i][1] >= pos_trace[i][0]
+                                       / (-80.0) + 7.0/20))
         # print("above_local_bottom?", above_local_bottom)
         above_bottom = above_bottom and above_local_bottom
 
-    print("above bottom?", above_bottom)
+    # print("above bottom?", above_bottom)
 
     true_label = below_top and above_bottom
 
