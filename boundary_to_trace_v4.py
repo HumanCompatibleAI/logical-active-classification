@@ -1,8 +1,9 @@
 import z3
 import math
 import numpy as np
+import matplotlib.pyplot as plt
 import funcy as fn
-import utils
+
 
 import funcy
 @fn.autocurry
@@ -17,24 +18,29 @@ def pre_process(boundary, eps, num, end_time): #boundary is a 2-d array: [[x_1, 
         for i in range(size):
             boundary[i][0] = boundary[i][0] + (end_time / num * 1.0)
         #print(boundary)
-    b_plus = [[0, 0] for i in range(len(boundary)-1)]
-    b_minus = [[0, 0] for i in range(len(boundary)-1)]
+    b_plus = [[0, 0] for i in range(len(boundary))]
+    b_minus = [[0, 0] for i in range(len(boundary))]
     for i in range(size - 1):
-        b_plus[i] = utils.move_middle_out([boundary[i], boundary[i+1]], eps)
-        b_minus[i] = utils.move_middle_out([boundary[i], boundary[i+1]],
-                                           (-1.0)*eps)
-        # dx = boundary[i][0] - boundary[i+1][0]
-        # dy = boundary[i][1] - boundary[i+1][1]
-        # norm = math.sqrt(dx**2 + dy**2)
-        # dx = dx / norm * eps
-        # dy = dy / norm * eps
-        # b_plus[i][0] = boundary[i][0] + dy
-        # b_plus[i][1] = boundary[i][1] - dx
-        # b_minus[i][0] = boundary[i][0] - dy
-        # b_minus[i][1] = boundary[i][1] + dx
+        dx = boundary[i][0] - boundary[i+1][0]
+        dy = boundary[i][1] - boundary[i+1][1]
+        norm = math.sqrt(dx**2 + dy**2)
+        dx = dx / norm * eps
+        dy = dy / norm * eps
+        b_plus[i][0] = boundary[i][0] + dy 
+        b_plus[i][1] = boundary[i][1] - dx
+        b_minus[i][0] = boundary[i][0] - dy 
+        b_minus[i][1] = boundary[i][1] + dx
+    b_plus[size-1][0] = boundary[size-1][0]
+    if boundary[size-1][1] + eps > 1:
+        b_plus[size-1][1] = boundary[size-1][1]
+    else:
+        b_plus[size-1][1] = boundary[size-1][1] + eps
+    b_minus[size-1][0] = boundary[size-1][0] - eps
+    if boundary[size-1][1] - eps < 0:
+        b_minus[size-1][1] = boundary[size-1][1]
+    else:
+        b_minus[size-1][1] = boundary[size-1][1] - eps
     return b_plus, b_minus
-
-# print(pre_process([[0,1], [1,0]], 0.70710678, 1000, 1000))
 
 def non_perp_process(boundary, eps):
     # deprecated
@@ -44,9 +50,8 @@ def non_perp_process(boundary, eps):
     for i in range(size - 1):
         b_plus[i][0] = boundary[i][0]
         b_plus[i][1] = boundary[i][1] + eps
-        b_minus[i][0] = boundary[i][0] 
+        b_minus[i][0] = boundary[i][0]
         b_minus[i][1] = boundary[i][1] - eps
-
     return b_plus, b_minus
      
 def make_psi(b_plus, b_minus, vs, end_time, num):
@@ -58,10 +63,9 @@ def make_psi(b_plus, b_minus, vs, end_time, num):
     t_minus = [int(b_minus[i][0] * num / end_time * 1.0) for i in range(len(b_minus))]
     # t_minus = [(b_minus[i][0] * num / end_time * 1.0) for i in range(len(b_minus))]
     h_minus = [b_minus[i][1] for i in range(len(b_minus))]
-    print("t_plus", t_plus)
+    # print("t_plus", t_plus)
     # print(h_plus)
-    print("t_minus", t_minus)
-
+    # print("t_minus", t_minus)
 
 
     for i in range(len(t_plus)):
@@ -104,8 +108,6 @@ def output_trace(phi, psi, vs, num, end_time):
 def trace(boundary, eps, num, vs, end_time, phi):
     # print("Inside trace function of boundary_to_trace")
     b_plus, b_minus = pre_process(boundary, eps, num, end_time)
-    print("b_plus", b_plus)
-    print("b_minus", b_minus)
     psi = make_psi(b_plus, b_minus, vs, end_time, num)
     return output_trace(phi, psi, vs, num, end_time)
 
