@@ -123,6 +123,10 @@ def plot(data, plotstyle, param_boundaries):
 
     plotstyle should be 'b-' for traces and 'tab:orange' for boundaries
     """
+    if plotstyle == 'b-':
+        title = "Plot of trace that is being labelled by the oracle"
+    if plotstyle == 'tab:orange':
+        title = "Plot of boundary that is being labelled by the oracle"
     x_len = param_boundaries[0][1] - param_boundaries[0][0]
     x_margin = 0.1*x_len
     y_len = param_boundaries[1][1] - param_boundaries[1][0]
