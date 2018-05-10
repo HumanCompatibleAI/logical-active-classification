@@ -5,7 +5,7 @@ import copy
 import z3
 import utils
 import math
-from oracle_positive_polygon import label, get_positive_example
+# from oracle_positive_polygon import label, get_positive_example
 # from oracle_polygon import label, get_positive_example
 # from oracle import label, get_positive_example
 
