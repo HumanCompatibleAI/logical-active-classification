@@ -6,7 +6,7 @@ import z3
 import utils
 import math
 # from oracle_positive_polygon import label, get_positive_example
-# from oracle_polygon import label, get_positive_example
+from oracle_polygon import label, get_positive_example
 # from oracle import label, get_positive_example
 
 def find_upper_endpoint_bounds(positive_example, tolerance_a, tolerance_b,
@@ -346,11 +346,11 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
     else:
         sign = -1
     distance_min = 0
-    print("index is", index)
-    print("first endpoint", endpoints[index])
-    print("second endpoint", endpoints[index+1])
+    # print("index is", index)
+    # print("first endpoint", endpoints[index])
+    # print("second endpoint", endpoints[index+1])
     mid = utils.midpoint([endpoints[index], endpoints[index + 1]])
-    print("midpoint", mid)
+    # print("midpoint", mid)
     len_mid_end = np.sqrt((mid[1] - endpoints[index+1][1])**2
                           + (mid[0] - endpoints[index+1][0])**2)
     if len_mid_end == 0:
@@ -361,13 +361,13 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
         dist = utils.distance_to_hit_line(mid, endpoints[index],
                                           endpoints[index - 1])
         distances.append(dist)
-        print("distance to line connecting previous two endpoints:", dist)
+        # print("distance to line connecting previous two endpoints:", dist)
     if index < len(endpoints) - 2:
         # ensure we don't go beyond line connecting two next endpoints
         dist = utils.distance_to_hit_line(mid, endpoints[index + 1],
                                           endpoints[index + 2])
         distances.append(dist)
-        print("distance to line connecting two next endpoints:", dist)
+        # print("distance to line connecting two next endpoints:", dist)
     # ensure we don't go beyond endpoints in this interval
     if endpoints[index+1][0] == endpoints[index][0]:
         dist_to_top = math.inf
@@ -375,7 +375,7 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
         dist_to_top = ((-1.0)*len_mid_end*(endpoints[index + 1][1]
                                            - endpoints[index][1])
                        / (endpoints[index + 1][0] - endpoints[index][0]))
-    print("distance to top endpoint:", dist_to_top)
+    # print("distance to top endpoint:", dist_to_top)
     distances.append(dist_to_top)
     if endpoints[index+1][1] == endpoints[index][1]:
         dist_to_right = math.inf
@@ -384,14 +384,14 @@ def maximally_extend_segment(endpoints, index, tolerance_a, tolerance_b,
                                              - endpoints[index][0])
                          / (endpoints[index + 1][1] - endpoints[index][1]))
     distances.append(dist_to_right)
-    print("distance to right endpoint:", dist_to_right)
+    # print("distance to right endpoint:", dist_to_right)
     distance_max = sign*min(distances)
     # find number of iterations we need
-    print("distance_max", distance_max)
-    print("distance_min", distance_min)
-    print("tolerance_b", tolerance_b)
+    # print("distance_max", distance_max)
+    # print("distance_min", distance_min)
+    # print("tolerance_b", tolerance_b)
     num_iters = np.ceil(np.log2(abs(distance_max - distance_min) / tolerance_b))
-    print("num_iters before maxing with 0", num_iters)
+    # print("num_iters before maxing with 0", num_iters)
     num_iters = int(max(num_iters, 0))
     # do bisection on distance to move middle out
     for i in range(num_iters):
@@ -441,7 +441,7 @@ def find_positive_set(iterations, tolerance_a, tolerance_b, param_boundaries):
     assert tolerance_a > 0, "tolerance_a should be positive in find_positive_set"
     assert isinstance(tolerance_b, float), "tolerance_b should be a float in find_positive_set"
     assert tolerance_b > 0, "tolerance_b should be positive in find_positive_set"
-
+    
     # get a positive example
     positive_example = get_positive_example(param_boundaries)
 
@@ -459,6 +459,7 @@ def find_positive_set(iterations, tolerance_a, tolerance_b, param_boundaries):
     # repeatedly find the midpoints of the line segments in the lower and upper
     # bounds, and move them out as far as possible
     for i in range(iterations):
+        print("in loop number " + str(i) + " when moving out midpoints")
         assert len(upper_bound) == len(lower_bound), "somehow upper and lower bounds became a different length in the loop of find_positive_set"
         upper_extensions = []
         lower_extensions = []
@@ -512,5 +513,5 @@ def classify_trace(bounds, trace):
 
 #boundary = [[19.0, 0.9], [19.0, 0.7000000000000001], [19.0, 0.5], [19.0, 0.29999999999999993]]
 #label(boundary)
-bounds = find_positive_set(4, 0.05, 0.05, [[0.0, 20.0], [0.0, 1.0]])
+bounds = find_positive_set(4, 0.05, 0.00625, [[0.0, 20.0], [0.0, 1.0]])
 print(bounds)

@@ -75,17 +75,20 @@ def label(boundary, should_invert=False, param_boundaries=[[0.0, 20.0],
             if trace[index][0] <= 5:
                 for i in range(index, len(trace)):
                     above_local_bottom = (above_local_bottom or
-                                          (trace[i][1] >= trace[i][0]/(-25.0)
+                                          (trace[i][1] >= (trace[index][0]
+                                                           /(-25.0))
                                            + 0.5))
             if trace[index][0] > 5 and trace[index][0] <= 12:
                 for i in range(index, len(trace)):
                     above_local_bottom = (above_local_bottom or
-                                          (trace[i][1] >= trace[i][0]/(-70.0)
+                                          (trace[i][1] >= (trace[index][0]
+                                                           /(-70.0))
                                            + 13.0/35))
             if trace[index][0] >= 12:
                 for i in range(index, len(trace)):
                     above_local_bottom = (above_local_bottom or
-                                          (trace[i][1] >= trace[i][0]/(-80.0)
+                                          (trace[i][1] >= (trace[index][0]
+                                                           /(-80.0))
                                            + 7.0/20))
             # print("above local bottom?", above_local_bottom)
             above_bottom = above_bottom and above_local_bottom

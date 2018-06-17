@@ -131,10 +131,13 @@ def plot(data, plotstyle, param_boundaries):
     x_margin = 0.1*x_len
     y_len = param_boundaries[1][1] - param_boundaries[1][0]
     y_margin = 0.1*y_len
-    axes = [param_boundaries[0][0] - x_margin, param_boundaries[0][1] + x_margin,
-            param_boundaries[1][0] - y_margin, param_boundaries[1][1] + y_margin]
+    axes = [param_boundaries[0][0] - x_margin,
+            param_boundaries[0][1] + x_margin,
+            param_boundaries[1][0] - y_margin,
+            param_boundaries[1][1] + y_margin]
     x_axis = [data[i][0] for i in range(len(data))]
     y_axis = [data[i][1] for i in range(len(data))]
+    plt.title(title)
     plt.plot(x_axis, y_axis, plotstyle)
     plt.axis(axes)
     plt.show()
